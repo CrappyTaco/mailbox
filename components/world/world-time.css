@@ -1,0 +1,178 @@
+@property --sky-top {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #c5dfe8;
+}
+@property --sky-horizon {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #d6e8ea;
+}
+.our-world {
+  background: var(--sky-top, #c5dfe8);
+  transition:
+    --sky-top 10s linear,
+    --sky-horizon 10s linear;
+}
+.our-world .world-scene {
+  background: var(--sky-top, #c5dfe8);
+}
+.world-header,
+.our-world > .lock-world {
+  color: var(--world-ui, #684b50);
+}
+.world-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 79%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sky-stars {
+  position: absolute;
+  inset: 0;
+  transition: opacity 10s steps(8);
+}
+.sky-stars i {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #d9dccb;
+}
+.sky-stars i:nth-child(4n):after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 2px;
+  left: -2px;
+  top: 0;
+  background: #d9dccb;
+  opacity: 0.6;
+}
+.sky-stars i:nth-child(4n):before {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 6px;
+  left: 0;
+  top: -2px;
+  background: #d9dccb;
+  opacity: 0.6;
+}
+.celestial {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  translate: -50% -50%;
+  image-rendering: pixelated;
+  transition:
+    left 10s steps(8),
+    top 10s steps(8),
+    opacity 10s linear;
+}
+.celestial-moon {
+  width: 56px;
+  height: 56px;
+}
+.landscape path,
+.landscape rect,
+.world-scene > .mailbox-hit .mailbox-art path {
+  transition:
+    fill 10s linear,
+    stroke 10s linear;
+}
+.our-world .nameplate {
+  background: var(--plaque-paper, #ffefd7);
+  border-color: var(--plaque-edge, #cfaa86);
+  box-shadow:
+    2px 0 var(--plaque-edge),
+    -2px 0 var(--plaque-edge),
+    0 2px var(--plaque-edge),
+    0 -2px var(--plaque-edge);
+  color: var(--plaque-ink, #684b50);
+  transition:
+    background-color 10s linear,
+    border-color 10s linear,
+    color 10s linear;
+}
+.world-clock {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: max(22px, env(safe-area-inset-right));
+  z-index: 5;
+  padding: 10px 16px 10px 12px;
+  color: var(--clock-ink, #e9e4d6);
+  background: color-mix(
+    in srgb,
+    var(--clock-ground, #6f7e60) 18%,
+    var(--clock-paper, #495748) 82%
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--clock-ink, #5f5353) 22%, transparent);
+  font-size: 16px;
+  line-height: 1.5;
+  transition:
+    color 10s linear,
+    background-color 10s linear,
+    border-color 10s linear;
+  pointer-events: none;
+}
+.world-clock > div {
+  display: grid;
+  grid-template-columns: 76px minmax(64px, max-content);
+  gap: 16px;
+}
+.world-clock time {
+  display: block;
+  white-space: nowrap;
+  overflow: visible;
+  padding-right: 3px;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.our-world .ambient-pixels {
+  opacity: 0.45;
+}
+@media (max-width: 700px) {
+  .world-sky {
+    height: 81%;
+  }
+  .celestial {
+    width: 48px;
+    height: 48px;
+  }
+  .celestial-moon {
+    width: 48px;
+    height: 48px;
+  }
+  .world-clock {
+    bottom: max(12px, env(safe-area-inset-bottom));
+    right: max(13px, env(safe-area-inset-right));
+    padding: 8px 14px 8px 10px;
+    font-size: 16px;
+  }
+  .world-clock > div {
+    grid-template-columns: 72px minmax(64px, max-content);
+    gap: 12px;
+  }
+  .our-world .mailbox-status {
+    bottom: 9%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .our-world,
+  .celestial,
+  .sky-stars,
+  .landscape path,
+  .landscape rect,
+  .world-scene > .mailbox-hit .mailbox-art path,
+  .world-clock,
+  .world-header,
+  .our-world > .lock-world,
+  .our-world .nameplate {
+    transition: none;
+  }
+}

@@ -1,0 +1,184 @@
+/* A fixed sheet plus controls fits the viewport; text flows onto another sheet. */
+.stationery.stationery-set[data-slot='dialog-content'] {
+  overflow: visible;
+  max-height: calc(100dvh - 20px);
+}
+.stationery-set .stationery-layout {
+  grid-template-columns: minmax(0, 1fr) 108px;
+  width: min(100%, calc((100dvh - 180px) * 0.78947 + 123px));
+}
+.stationery-set .letter-stage {
+  width: 100%;
+}
+.stationery-set.is-reading .stationery-layout,
+.stationery-set.showing-preview .stationery-layout {
+  grid-template-columns: 1fr;
+  width: min(100%, calc((100dvh - 150px) * 0.78947));
+}
+.stationery-set .physical-sheet .paper-sheet {
+  width: 100%;
+  height: 100%;
+}
+.stationery-set textarea.sheet-field {
+  overflow: hidden;
+  scrollbar-width: none;
+}
+.paper-sheet.mode-stamp .sheet-field,
+.paper-sheet.mode-sticker .sheet-field {
+  pointer-events: auto;
+}
+.page-turn {
+  overflow: clip;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  perspective: 1600px;
+  pointer-events: auto;
+}
+.turning-leaf {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  box-shadow: 4px 3px #684b5033;
+}
+.turn-front,
+.turn-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background: #fff5df;
+}
+.turn-back {
+  transform: rotateY(180deg);
+  box-shadow: inset 4px 0 #d9c3a1;
+}
+.turn-front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-right: 3px solid #d9c3a1;
+}
+.turn-backward .turning-leaf {
+  transform-origin: right center;
+}
+.turn-forward.turn-ready .turning-leaf {
+  animation: sheet-forward 0.55s cubic-bezier(0.35, 0.05, 0.25, 1) both;
+}
+.turn-backward.turn-ready .turning-leaf {
+  animation: sheet-backward 0.55s cubic-bezier(0.35, 0.05, 0.25, 1) both;
+}
+@keyframes sheet-forward {
+  to {
+    transform: rotateY(-178deg);
+  }
+}
+@keyframes sheet-backward {
+  to {
+    transform: rotateY(178deg);
+  }
+}
+@media (max-width: 600px), (max-height: 650px) {
+  .stationery.stationery-set[data-slot='dialog-content'] {
+    width: calc(100% - 16px);
+    padding: 5px;
+  }
+  .stationery-set .stationery-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .stationery-set .letter-stage {
+    width: min(100%, calc((100dvh - 290px) * 0.78947));
+  }
+  .stationery-set.is-reading .letter-stage,
+  .stationery-set.showing-preview .letter-stage {
+    width: min(100%, calc((100dvh - 140px) * 0.78947));
+  }
+  .stationery-set.is-reading .stationery-layout,
+  .stationery-set.showing-preview .stationery-layout {
+    width: 100%;
+  }
+  .stationery-set .editor-rail {
+    display: grid;
+    grid-template-columns: 1fr 58px;
+    width: 100%;
+    gap: 8px;
+  }
+  .stationery-set .paper-tools {
+    grid-column: 1/-1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin: 0;
+    padding: 4px 2px;
+    gap: 3px;
+    justify-content: center;
+  }
+  .stationery-set .tool-modes {
+    display: flex;
+    gap: 2px;
+  }
+  .stationery-set .paper-tool {
+    width: 42px;
+    min-height: 43px;
+    padding: 3px 0;
+    font-size: 11px;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .stationery-set .paper-tool svg {
+    width: 17px;
+    height: 17px;
+  }
+  .stationery-set .history-tools {
+    display: flex;
+    border: 0;
+    border-left: 1px dotted #b99b80;
+    padding: 0 0 0 3px;
+  }
+  .stationery-set .history-tools .paper-tool {
+    width: 32px;
+    min-height: 43px;
+  }
+  .stationery-set .object-adjust {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 4px;
+    width: 100%;
+    order: 1;
+  }
+  .stationery-set .object-adjust-title {
+    padding: 0;
+    font-size: 12px;
+  }
+  .stationery-set .object-adjust button {
+    width: 100%;
+    min-height: 30px;
+  }
+  .stationery-set .editor-trash-slot {
+    grid-column: 2;
+    order: 2;
+    width: 58px;
+    height: 58px;
+    margin: 0;
+  }
+  .stationery-set .letter-trash {
+    width: 58px;
+    height: 58px;
+  }
+  .stationery-set .tool-panel {
+    top: auto;
+    bottom: calc(100% + 8px);
+    right: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turn-ready .turning-leaf {
+    animation-duration: 0.02s !important;
+  }
+}

@@ -1,0 +1,236 @@
+/* One uniformly scaled 1786 × 880 plane registers art, geometry and hit target. */
+.our-world .world-scene {
+  min-height: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: linear-gradient(var(--sky-top), var(--sky-horizon));
+}
+.reference-stage {
+  position: absolute;
+  width: max(100vw, calc(100dvh * 1786 / 880));
+  aspect-ratio: 1786 / 880;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  isolation: isolate;
+  transition: opacity 0.5s steps(5);
+}
+.our-world .reference-landscape,
+.our-world .reference-sky {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.reference-sky {
+  z-index: 1;
+}
+.reference-landscape {
+  z-index: 2;
+}
+.reference-stage image,
+.reference-mailbox image {
+  image-rendering: pixelated;
+}
+.reference-day-paint {
+  filter: brightness(1.48) saturate(1.08);
+}
+.reference-object-paint {
+  filter: brightness(var(--reference-day-brightness, 1));
+}
+.mailbox-paint {
+  /* Source palette in daylight; only a small dimming at night. */
+  filter: brightness(calc(1 - var(--reference-night, 0) * 0.12));
+}
+.reference-cloud-paint {
+  filter: brightness(var(--reference-cloud-brightness, 1))
+    sepia(var(--reference-cloud-sepia, 0));
+}
+.reference-night {
+  transition: opacity 10s linear;
+}
+.reference-star {
+  animation: reference-twinkle 9s steps(3) infinite alternate;
+}
+@keyframes reference-twinkle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+.reference-cloud {
+  animation: reference-cloud-drift var(--cloud-duration, 90s) steps(12) infinite
+    alternate;
+}
+@keyframes reference-cloud-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--cloud-distance, 12px));
+  }
+}
+.reference-celestial {
+  transition:
+    transform 10s linear,
+    opacity 10s linear;
+}
+.our-world .reference-stage .mailbox-hit {
+  left: 44.568869%;
+  top: 48.295455%;
+  bottom: auto;
+  width: 12.541993%;
+  /* 1/16 steps of the logical 112px grid, within 3.5px of the scene size.
+     Keep the master intact and perform only the final display resampling. */
+  width: round(nearest, 12.541993%, 7px);
+  height: auto;
+  aspect-ratio: 112 / 154;
+  transform: none;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  z-index: 3;
+  -webkit-tap-highlight-color: transparent;
+}
+.our-world .mailbox-art,
+.our-world .mailbox-hit:hover .mailbox-art {
+  width: 100%;
+  height: 100%;
+  filter: none;
+  transform: none;
+}
+.our-world .mailbox-hit:focus-visible {
+  outline: 2px dashed var(--world-ui);
+  outline-offset: 6px;
+}
+.our-world .world-header {
+  left: 47px;
+  top: 37px;
+}
+.our-world .reference-wordmark svg {
+  width: 246px;
+  height: 33px;
+  image-rendering: pixelated;
+}
+.our-world .world-clock {
+  box-sizing: border-box;
+  right: max(27px, env(safe-area-inset-right));
+  bottom: max(36px, env(safe-area-inset-bottom));
+  width: 238px;
+  min-height: 88px;
+  padding: 12px 20px;
+  background: #283948ed;
+  border: 2px solid #23243c;
+  box-shadow:
+    inset 2px 2px #54607a,
+    inset -2px -2px #1c233b,
+    2px 2px #23243c;
+  border-radius: 5px;
+  color: #f5f0df;
+  font-size: 19px;
+  line-height: 1.5;
+}
+.our-world .world-clock > div {
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+}
+.our-world .world-clock time {
+  padding: 0;
+  letter-spacing: 0;
+}
+.our-world .mailbox-status {
+  bottom: 10%;
+  z-index: 4;
+}
+.our-world .mailbox-status .text-action {
+  background: #283948e0;
+  padding: 5px 12px;
+  color: #f6f1df;
+}
+.reference-ambient {
+  display: none;
+}
+.mailbox-art.is-retrieving .mailbox-letter {
+  opacity: 1;
+  animation: mailbox-retrieve 450ms 560ms steps(6) both;
+}
+@keyframes mailbox-retrieve {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--mailbox-exit-x) 0;
+  }
+}
+.world-delivering > .reference-stage {
+  opacity: 0;
+  pointer-events: none;
+}
+.world-delivered > .reference-stage {
+  opacity: 1;
+}
+@media (max-width: 700px) {
+  .reference-stage {
+    width: max(100vw, calc(100dvh * 1.25));
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+  }
+  .our-world .world-header {
+    left: 22px;
+    top: max(24px, env(safe-area-inset-top));
+  }
+  .our-world .reference-wordmark svg {
+    width: 220px;
+    height: auto;
+  }
+  .our-world .world-clock {
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(22px, env(safe-area-inset-bottom));
+    width: 207px;
+    min-height: 78px;
+    padding: 10px 14px;
+    font-size: 18px;
+  }
+  .our-world .mailbox-status {
+    bottom: 14%;
+  }
+  .reference-celestial {
+    translate: 140px -70px;
+  }
+}
+@media (max-height: 550px) {
+  .our-world .world-header {
+    top: 16px;
+    left: 22px;
+  }
+  .our-world .reference-wordmark svg {
+    width: 210px;
+    height: auto;
+  }
+  .our-world .world-clock {
+    bottom: 18px;
+    right: 18px;
+    width: 195px;
+    min-height: 70px;
+    font-size: 17px;
+    padding: 8px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reference-night,
+  .reference-celestial,
+  .reference-stage {
+    transition: none;
+  }
+  .reference-star,
+  .reference-cloud,
+  .is-retrieving .mailbox-letter {
+    animation: none;
+  }
+}

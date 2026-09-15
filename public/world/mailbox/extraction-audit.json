@@ -1,0 +1,53 @@
+{
+  "source": "shell-border-master.png",
+  "sourceSize": [
+    1122,
+    1402
+  ],
+  "runtimeSize": [
+    1122,
+    1402
+  ],
+  "removedBackgroundPixels": 1103640,
+  "retainedArtworkPixels": 469404,
+  "darkSourcePixels": 187579,
+  "darkContourPixels": 3416,
+  "discardedDarkPixels": 0,
+  "modifiedRetainedRGBPixels": 0,
+  "shellMask": false,
+  "borderRepaint": false,
+  "postReplacement": false,
+  "doorSource": "MAILBOX_DOOR_FACE inside approved master rim",
+  "doorInk": {
+    "outline": [
+      5,
+      5,
+      25
+    ],
+    "rim": [
+      87,
+      112,
+      171
+    ],
+    "blue": [
+      73,
+      94,
+      155
+    ],
+    "light": [
+      79,
+      106,
+      164
+    ],
+    "shade": [
+      67,
+      89,
+      149
+    ],
+    "underside": [
+      59,
+      77,
+      137
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+/* A single envelope and a single explicit timeline own the whole journey. */
+.world-delivering > .landscape,
+.world-delivering > .mailbox-hit,
+.world-delivering > .world-sky {
+  animation: none !important;
+  opacity: 0;
+}
+.delivery-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  color: #f4e9ce;
+  background: #252238;
+  overflow: hidden;
+}
+.space-stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.delivery-world,
+.delivery-stage p {
+  position: relative;
+  z-index: 1;
+}
+.delivery-world {
+  display: block;
+  width: min(640px, 96vw, 78dvh);
+  height: auto;
+  overflow: visible;
+}
+.delivery-world .mailbox-art {
+  width: 100%;
+  height: 100%;
+  filter: none;
+}
+.delivery-world .mailbox-flag {
+  transition: transform 0.45s steps(6);
+}
+.delivery-world .mailbox-door,
+.delivery-world .open-door {
+  animation: none;
+}
+.delivery-stage p {
+  font-size: 18px;
+  margin: 4px 0 0;
+}
+.delivery-world text {
+  font-family: 'Pixelify', monospace;
+  font-size: 12px;
+  fill: #f4e9ce;
+}
+.delivery-flight {
+  opacity: 1;
+}
+.delivery-stage .envelope-flap,
+.delivery-stage .envelope-seal {
+  animation: none;
+}
+@media (max-width: 600px) {
+  .delivery-world {
+    width: min(100vw, 68dvh);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .delivery-world .mailbox-flag {
+    transition: none;
+  }
+}

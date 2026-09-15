@@ -1,0 +1,2062 @@
+@import 'tailwindcss';
+@import '../components/animals/animals.css';
+
+/* The mailbox is the only navigation through the world. */
+.lock-world {
+  position: absolute;
+  right: 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  padding: 8px 1px;
+  min-height: 32px;
+}
+.lock-world svg {
+  width: 9px;
+}
+.mailbox-status {
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  bottom: 5%;
+  text-align: center;
+  z-index: 3;
+}
+.mailbox-status > p {
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-bottom: 7px;
+}
+.mailbox-status svg {
+  width: 12px;
+  display: inline-block;
+}
+.text-action {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-color: #957962;
+  min-height: 40px;
+  padding: 3px 6px;
+  font-size: 16px;
+}
+.text-action:hover {
+  color: #9b5266;
+}
+.text-action svg {
+  width: 12px;
+}
+.ambient-pixels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ambient-pixels i {
+  position: absolute;
+  background: #fff6c8;
+  width: 3px;
+  height: 3px;
+  box-shadow: 3px -3px #fff6c84d;
+  opacity: 0;
+  animation: data-glimmer 9s steps(5) var(--delay) infinite;
+}
+.connection-lost .ambient-pixels i {
+  animation-play-state: paused;
+}
+.connection-message {
+  position: absolute;
+  bottom: 1%;
+  left: 12px;
+  right: 12px;
+  z-index: 8;
+  text-align: center;
+  background: #fcf0db;
+  font-size: 14px;
+  padding: 5px;
+  color: #7d4759;
+}
+.connection-message button {
+  text-decoration: underline;
+}
+.gate-error-message {
+  color: #813e50;
+  font-size: 14px !important;
+  margin: 10px 10px 0 !important;
+}
+.gate-error input {
+  animation: gate-shake 0.35s steps(4);
+}
+.gate-error {
+  bottom: 2%;
+}
+.arrival-burst {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  z-index: 6;
+  pointer-events: none;
+}
+.arrival-burst i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #fff9d3;
+  transform: rotate(calc(var(--i)*45deg));
+  animation: arrival-spark 2s steps(12) both;
+}
+.mail-arriving .mailbox-art {
+  animation: fresh-paint 2s steps(8);
+}
+/* Warm paper with stepped edges and an accessible, focus-trapping dialog underneath. */
+[data-slot='dialog-overlay'] {
+  background: #5c485557;
+  backdrop-filter: none;
+  z-index: 30;
+}
+.stationery[data-slot='dialog-content'] {
+  position: fixed;
+  z-index: 40;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: block;
+  width: min(650px, calc(100% - 44px));
+  max-width: none;
+  max-height: calc(100dvh - 50px);
+  overflow: auto;
+  background: var(--paper);
+  color: var(--ink);
+  border: 0;
+  border-radius: 0;
+  padding: 40px 40px 26px;
+  font-size: 18px;
+  box-shadow:
+    4px 0 #d5b59a,
+    -4px 0 #d5b59a,
+    0 4px #d5b59a,
+    0 -4px #d5b59a,
+    8px 8px #68515133;
+  ring: 0;
+  outline: 0;
+  animation: letter-unfold 0.5s steps(8);
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 3px,
+    #dab99709 3px,
+    #dab99709 4px
+  );
+}
+.stationery:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 48%;
+  bottom: 0;
+  width: 1px;
+  background: #bd9d7720;
+  pointer-events: none;
+}
+.paper-close {
+  position: absolute;
+  right: 15px;
+  top: 12px;
+  width: 36px;
+  height: 36px;
+  padding: 12px;
+  z-index: 2;
+}
+.paper-close svg {
+  width: 100%;
+}
+.postage-stamp {
+  position: absolute;
+  right: 39px;
+  top: 54px;
+  width: 57px;
+  height: 70px;
+  background: #ecd3ca;
+  outline: 2px dashed #b69389;
+  outline-offset: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  rotate: 5deg;
+}
+.postage-stamp svg {
+  width: 35px;
+  height: 43px;
+}
+.postage-stamp span {
+  font-size: 8px;
+  letter-spacing: 0.8px;
+}
+.letter-heading {
+  padding-right: 75px;
+  margin: 12px 0 25px;
+}
+.postmark {
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  color: #947167;
+  display: block;
+  margin-bottom: 14px;
+}
+.letter-title {
+  font-size: 27px !important;
+  font-weight: 400 !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0.2px;
+}
+.letter-date {
+  font-size: 14px !important;
+  color: #8b6c60 !important;
+  margin-top: 8px;
+}
+.letter-body {
+  font-family: 'Pixelify', monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+  font-size: 20px;
+  min-height: 180px;
+  max-height: 40dvh;
+  overflow-y: auto;
+  padding: 5px 8px 10px 0;
+}
+.letter-body:focus-visible {
+  outline: 2px dashed #b1917e;
+  outline-offset: 4px;
+}
+.letter-form textarea {
+  display: block;
+  width: 100%;
+  height: 240px;
+  min-height: 160px;
+  max-height: 42dvh;
+  resize: vertical;
+  border: 0;
+  border-bottom: 1px dashed #cdb296;
+  background: transparent;
+  border-radius: 0;
+  font-size: 20px;
+  line-height: 1.7;
+  color: #674c51;
+  padding: 4px 2px 12px;
+}
+.letter-form textarea::placeholder {
+  color: #ad9181;
+}
+.letter-form textarea:focus-visible {
+  outline: 1px dashed #b1917e;
+  outline-offset: 5px;
+}
+.signature {
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 23px 0 25px;
+  display: block;
+}
+.signature svg {
+  display: inline-block;
+  width: 12px;
+  margin-left: 8px;
+}
+.rose-button {
+  background: #eab8b0;
+  border-color: #b5837c;
+  box-shadow: 2px 2px #b5837c;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+}
+.rose-button:hover {
+  background: #f5c9bd;
+}
+.rose-button svg {
+  width: 12px;
+}
+.draft-note {
+  font-size: 12px;
+  text-align: right;
+  margin-top: 15px;
+  color: #8a7062;
+}
+.paper-error {
+  font-size: 15px;
+  line-height: 1.4;
+  color: #9b435b;
+  margin: 15px 0;
+  padding: 10px 0;
+  border-top: 1px dashed #d7aba4;
+}
+/* Opening: metal door, floating envelope, unfolded paper. */
+.opening-animation {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: #624b591c;
+  pointer-events: none;
+}
+.opening-animation > svg {
+  position: absolute;
+  width: 65px;
+  left: calc(50% - 53px);
+  top: 50%;
+  animation: envelope-to-reader var(--open-time) steps(20) both;
+}
+.unfolding-paper {
+  position: absolute;
+  top: 27%;
+  left: calc(50% - 110px);
+  width: 220px;
+  height: 250px;
+  background: #fff2d8;
+  border: 3px solid #c2a282;
+  box-shadow: 5px 5px #62504e26;
+  animation: paper-emerge var(--open-time) steps(15) both;
+  padding: 48px 27px;
+}
+.unfolding-paper i,
+.delivery-paper i {
+  height: 3px;
+  background: #b794775c;
+  display: block;
+  margin: 14px 0;
+  width: 100%;
+}
+.unfolding-paper i:nth-child(2) {
+  width: 70%;
+}
+.unfolding-paper > svg {
+  width: 18px;
+  margin-top: 20px;
+}
+/* Paper, envelope, data, envelope. Success is shown only after the database confirms. */
+.delivery-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+}
+.delivery-paper {
+  position: absolute;
+  left: calc(50% - 110px);
+  top: 24%;
+  width: 220px;
+  height: 260px;
+  background: #fff2d8;
+  border: 3px solid #c2a282;
+  box-shadow: 5px 5px #62504e26;
+  padding: 35px 25px;
+  animation: paper-fold 1.1s steps(12) both;
+  transform-origin: 50% 70%;
+}
+.delivery-paper svg {
+  width: 16px;
+  margin-top: 25px;
+}
+.delivery-caption {
+  position: absolute;
+  top: 68%;
+  left: 15px;
+  right: 15px;
+  text-align: center;
+}
+.delivery-caption p {
+  font-size: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+.delivery-caption p svg {
+  width: 18px;
+}
+.delivery-caption span {
+  display: block;
+  font-size: 15px;
+  margin-top: 12px;
+}
+.delivery-complete .delivery-caption {
+  animation: heart-pulse 1s steps(3);
+}
+@keyframes data-glimmer {
+  0%,
+  55%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  65%,
+  85% {
+    opacity: 0.7;
+  }
+  95% {
+    opacity: 0;
+    translate: 6px -13px;
+  }
+}
+@keyframes gate-shake {
+  20%,
+  60% {
+    translate: -3px 0;
+  }
+  40%,
+  80% {
+    translate: 3px 0;
+  }
+}
+@keyframes arrival-spark {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+    translate: calc(cos(var(--i)*45deg)*85px) calc(sin(var(--i)*45deg)*85px);
+  }
+}
+@keyframes fresh-paint {
+  0% {
+    filter: sepia(0.4);
+  }
+  40% {
+    filter: brightness(1.2);
+  }
+  100% {
+    filter: none;
+  }
+}
+@keyframes letter-unfold {
+  from {
+    scale: 0.92 0.7;
+    opacity: 0.5;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes envelope-to-reader {
+  0% {
+    translate: 0 0;
+    scale: 0.6;
+    rotate: -15deg;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  30% {
+    translate: -25px 15px;
+    scale: 1;
+  }
+  65% {
+    translate: 15px -30px;
+    scale: 2.8;
+    rotate: 0deg;
+    opacity: 1;
+  }
+  85%,
+  100% {
+    translate: 15px -30px;
+    scale: 2.8;
+    opacity: 0;
+  }
+}
+@keyframes paper-emerge {
+  0%,
+  60% {
+    opacity: 0;
+    scale: 0.5 0.1;
+    translate: 0 50px;
+  }
+  75% {
+    opacity: 1;
+    scale: 0.7 0.2;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 1;
+    scale: 1 1;
+    translate: 0 0;
+  }
+}
+@keyframes paper-fold {
+  0%,
+  25% {
+    scale: 1 1;
+    opacity: 1;
+  }
+  55% {
+    scale: 1 0.4;
+  }
+  85% {
+    scale: 0.4 0.25;
+    opacity: 1;
+  }
+  100% {
+    scale: 0.35 0.2;
+    opacity: 0;
+  }
+}
+@keyframes envelope-depart {
+  0%,
+  18% {
+    opacity: 0;
+    scale: 1.4;
+  }
+  27% {
+    opacity: 1;
+    scale: 1.4;
+    translate: 0 0;
+  }
+  34% {
+    scale: 0.75;
+    translate: -115px 90px;
+    rotate: -10deg;
+  }
+  44% {
+    opacity: 1;
+    scale: 0.65;
+    translate: -150px 25px;
+    rotate: -35deg;
+  }
+  53%,
+  100% {
+    opacity: 0;
+    scale: 0.4;
+    translate: -140px -45px;
+    rotate: -45deg;
+  }
+}
+@keyframes packet-flight {
+  0% {
+    opacity: 0;
+    offset-distance: 0%;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    offset-distance: 100%;
+  }
+}
+@keyframes envelope-arrive {
+  0%,
+  75% {
+    opacity: 0;
+    translate: 0 -25px;
+    scale: 0.6;
+  }
+  85% {
+    opacity: 1;
+    translate: 0 -18px;
+    scale: 1;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 0.7;
+  }
+}
+@keyframes path-appear {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  48%,
+  80% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes burst-appear {
+  0%,
+  83% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  90% {
+    opacity: 1;
+    scale: 1.2;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes delivery-light {
+  0%,
+  25% {
+    background: #fff3dde8;
+  }
+  65%,
+  100% {
+    background: #fff3ddcc;
+  }
+}
+@media (max-width: 700px) {
+  .mailbox-status {
+    bottom: 6%;
+  }
+  .mailbox-status > p {
+    font-size: 17px;
+    flex-wrap: wrap;
+  }
+  .waiting-note {
+    font-size: 14px;
+  }
+  .mail-notice {
+    top: 29%;
+    font-size: 15px;
+  }
+  .stationery[data-slot='dialog-content'] {
+    padding: 30px 22px 20px;
+    width: calc(100% - 32px);
+    max-height: calc(100dvh - 34px);
+  }
+  .postage-stamp {
+    right: 25px;
+    top: 65px;
+    width: 44px;
+    height: 55px;
+  }
+  .postage-stamp svg {
+    width: 26px;
+    height: 32px;
+  }
+  .postage-stamp span {
+    font-size: 6px;
+  }
+  .letter-heading {
+    padding-right: 56px;
+    margin-bottom: 20px;
+  }
+  .postmark {
+    font-size: 9px;
+    line-height: 1.6;
+    letter-spacing: 1px;
+  }
+  .letter-title {
+    font-size: 24px !important;
+  }
+  .letter-form textarea {
+    font-size: 19px;
+    height: 240px;
+    min-height: 130px;
+    max-height: 36dvh;
+  }
+  .letter-body {
+    font-size: 19px;
+    min-height: 120px;
+    max-height: 37dvh;
+  }
+  .signature {
+    margin: 18px 0;
+  }
+  .draft-note {
+    font-size: 11px;
+  }
+  .delivery-caption {
+    top: 69%;
+  }
+  .delivery-caption p {
+    font-size: 23px;
+  }
+  .delivery-caption span {
+    font-size: 14px;
+  }
+  .data-packets {
+    left: calc(50% - 220px);
+    top: 13%;
+  }
+  .postal-path {
+    left: 0;
+    width: 100%;
+  }
+  .arriving-envelope {
+    left: 73%;
+  }
+  .travelling-envelope {
+    animation-name: mobile-depart;
+  }
+  .gate-error-message {
+    font-size: 13px !important;
+  }
+}
+@keyframes mobile-depart {
+  0%,
+  18% {
+    opacity: 0;
+    scale: 1.3;
+  }
+  27% {
+    opacity: 1;
+    scale: 1.3;
+    translate: 0 0;
+  }
+  34% {
+    scale: 0.75;
+    translate: -50px 80px;
+    rotate: -10deg;
+  }
+  44% {
+    opacity: 1;
+    scale: 0.65;
+    translate: -90px 25px;
+    rotate: -35deg;
+  }
+  53%,
+  100% {
+    opacity: 0;
+    scale: 0.4;
+    translate: -80px -45px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .opening-animation {
+    display: none;
+  }
+  .delivery-paper,
+  .travelling-envelope,
+  .data-packets,
+  .postal-path,
+  .delivery-burst {
+    display: none;
+  }
+  .arriving-envelope {
+    opacity: 1 !important;
+    left: calc(50% - 45px);
+    top: 40%;
+    width: 90px;
+    animation: none !important;
+  }
+  .delivery-vignette {
+    background: #fff3dde8;
+  }
+  .ambient-pixels {
+    display: none;
+  }
+  .mailbox-art,
+  .landscape {
+    transform: none !important;
+    scale: 1 !important;
+  }
+}
+
+@font-face {
+  font-family: 'Pixelify';
+  src: url('/fonts/pixelify-sans-latin-400-normal.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pixelify';
+  src: url('/fonts/pixelify-sans-latin-600-normal.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+:root {
+  --cream: #f4e9ce;
+  --ink: #252238;
+  --muted: #4b568e;
+  --rose: #bd4760;
+  --line: #a68a78;
+  --paper: #f4e9ce;
+  --sky: #f1d7ce;
+  --font-sans: 'Pixelify', monospace;
+  --bounce-time: 3.6s;
+  --open-time: 1.35s;
+  --delivery-time: 3.8s;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--cream);
+  color: var(--ink);
+}
+body,
+button,
+input,
+textarea {
+  font-family: 'Pixelify', monospace;
+  font-size: 18px;
+}
+button,
+a,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px dashed #86586d;
+  outline-offset: 7px;
+}
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px dashed #956671;
+  outline-offset: 4px;
+}
+svg {
+  image-rendering: pixelated;
+}
+p {
+  margin: 0;
+}
+.our-world {
+  min-height: 100dvh;
+  padding: 25px 5vw 18px;
+  position: relative;
+  isolation: isolate;
+}
+.our-world:before {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 1px solid var(--line);
+  outline: 1px dashed #e6bdb1;
+  outline-offset: 3px;
+  pointer-events: none;
+}
+.our-world:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.16;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%2392796a' filter='url(%23n)' opacity='.35' d='M0 0h120v120H0z'/%3E%3C/svg%3E");
+}
+.world-header {
+  max-width: 1180px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+.wordmark svg {
+  width: 18px;
+}
+.world-header > p {
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--muted);
+}
+.world-scene {
+  position: relative;
+  height: calc(100dvh - 190px);
+  min-height: 600px;
+  max-height: 850px;
+  overflow: hidden;
+  background: var(--sky);
+}
+.auggie {
+  --sky: #cce1e8;
+}
+.landscape {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  pointer-events: none;
+}
+.mailbox-hit {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
+  width: 244px;
+  height: 292px;
+  padding: 0;
+  z-index: 2;
+}
+.mailbox-art {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(2px 2px 0 #6b647015);
+  transition: filter 0.15s;
+}
+.mailbox-hit:hover .mailbox-art {
+  filter: drop-shadow(2px 2px 0 #6b647015) brightness(1.045);
+  transform: translateY(-2px);
+}
+.mailbox-hit:focus-visible {
+  outline-offset: -15px;
+}
+.mailbox-body {
+  animation: mailbox-breathe 6s steps(2) infinite;
+  transform-origin: 55px 120px;
+}
+.mailbox-flag {
+  transform-origin: 74px 49px;
+  transform: rotate(90deg);
+  transition: transform 0.6s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+.mailbox-flag.flag-up {
+  transform: rotate(0deg);
+}
+.nameplate {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 125px;
+  padding: 4px 18px;
+  background: #ffefd7;
+  border: 2px solid #cfaa86;
+  box-shadow:
+    2px 0 #f5d2af,
+    -2px 0 #f5d2af,
+    0 2px #f5d2af,
+    0 -2px #f5d2af;
+  text-align: center;
+  font-size: 21px;
+  z-index: 3;
+}
+.passcode-gate {
+  position: absolute;
+  bottom: 3.8%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 3;
+}
+.passcode-gate label {
+  font-size: 16px;
+  display: block;
+  margin-bottom: 12px;
+}
+.passcode-gate > div {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.passcode-gate input {
+  min-width: 0;
+  width: 190px;
+  background: #fff5e3;
+  border: 2px solid #b19779;
+  box-shadow: inset 2px 2px #eed9bd;
+  padding: 8px 12px;
+  color: var(--ink);
+  font-size: 16px;
+  border-radius: 0;
+}
+.pixel-button {
+  background: #fff0d9;
+  border: 2px solid #9d7865;
+  box-shadow: 2px 2px 0 #917660;
+  padding: 8px 17px;
+  min-height: 42px;
+  font-size: 17px;
+  line-height: 1.2;
+  transition: transform 0.1s;
+}
+.pixel-button:hover {
+  background: #fff9eb;
+  transform: translateY(-2px);
+}
+.pixel-button:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px #917660;
+}
+.flower-sway {
+  transform-origin: 6px 20px;
+  animation: flower-sway 4s steps(3) var(--delay, 0s) infinite;
+}
+.cloud-drift {
+  animation: cloud-drift 36s linear var(--delay, 0s) infinite alternate;
+}
+.little-bird {
+  animation: bird-hop 18s steps(1) infinite;
+}
+.has-mail .mailbox-body {
+  animation: mailbox-excited var(--bounce-time) steps(5) infinite;
+}
+.is-opening .mailbox-body {
+  animation: mailbox-excited 0.4s steps(4) 2;
+}
+.is-opening .mailbox-flag {
+  transform: rotate(90deg);
+}
+@keyframes flower-sway {
+  0%,
+  100% {
+    rotate: -4deg;
+  }
+  50% {
+    rotate: 4deg;
+  }
+}
+@keyframes cloud-drift {
+  to {
+    translate: 24px 0;
+  }
+}
+@keyframes island-bob {
+  50% {
+    translate: 0 -3px;
+  }
+}
+@keyframes heart-pulse {
+  50% {
+    opacity: 0.7;
+    translate: 0 -2px;
+  }
+}
+@keyframes mailbox-breathe {
+  50% {
+    translate: 0 -1px;
+  }
+}
+@keyframes mailbox-excited {
+  0%,
+  70%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  78% {
+    rotate: -1deg;
+  }
+  85% {
+    translate: 0 -2px;
+    rotate: 1deg;
+  }
+  93% {
+    rotate: -1deg;
+  }
+}
+@keyframes butterfly {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  30% {
+    translate: -16px -8px;
+  }
+  60% {
+    translate: 24px -20px;
+  }
+  80% {
+    translate: 8px 2px;
+  }
+}
+@keyframes bird-hop {
+  0%,
+  78%,
+  100% {
+    translate: 0 0;
+  }
+  80% {
+    translate: 3px -2px;
+  }
+  82% {
+    translate: 6px 0;
+  }
+  84% {
+    translate: 9px -2px;
+  }
+  86% {
+    translate: 12px 0;
+  }
+}
+@media (min-width: 1600px) {
+  .our-world {
+    padding-top: 38px;
+  }
+  .world-header {
+    margin-bottom: 30px;
+  }
+  .world-scene {
+    height: calc(100dvh - 230px);
+  }
+}
+@media (max-width: 700px) {
+  .our-world {
+    padding: 22px 20px 20px;
+  }
+  .world-header {
+    margin-bottom: 18px;
+  }
+  .wordmark {
+    font-size: 27px;
+    gap: 10px;
+  }
+  .wordmark svg {
+    width: 14px;
+  }
+  .world-header > p {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+  }
+  .world-scene {
+    height: calc(100dvh - 165px);
+    min-height: 620px;
+    max-height: none;
+  }
+  .scene-intro {
+    top: 7%;
+    font-size: 21px;
+  }
+  .mailbox-hit {
+    width: 230px;
+    height: 275px;
+    bottom: 25%;
+  }
+  .nameplate {
+    bottom: 21%;
+  }
+  .passcode-gate {
+    bottom: 5%;
+  }
+  .passcode-gate label {
+    font-size: 15px;
+  }
+  .passcode-gate > div {
+    gap: 8px;
+    padding: 0 15px;
+  }
+  .passcode-gate input {
+    width: 165px;
+    font-size: 16px;
+  }
+  .pixel-button {
+    padding: 9px 12px;
+    font-size: 16px;
+  }
+  .world-footer {
+    justify-content: center;
+    margin-top: 20px;
+    font-size: 13px;
+  }
+  .world-footer > span:first-child,
+  .world-footer > span:last-child {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.stationery[data-slot='dialog-content'] {
+  translate: none;
+}
+.gate-error {
+  bottom: 2%;
+}
+@keyframes packet-reveal {
+  0% {
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (max-width: 700px) {
+  .packet-route {
+    left: 0;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .packet-route {
+    display: none;
+  }
+}
+.stationery[data-closed] {
+  display: none;
+  animation: none;
+}
+.fallback-world {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  padding: 30px;
+}
+.fallback-world h1 {
+  font-size: 28px;
+}
+@media (max-height: 800px) and (min-width: 701px) {
+  .world-scene {
+    min-height: 500px;
+  }
+  .mailbox-hit {
+    width: 222px;
+    height: 265px;
+  }
+  .mail-notice {
+    bottom: calc(22% + 268px);
+  }
+}
+@media (max-width: 700px) {
+  .mail-notice {
+    bottom: calc(25% + 268px);
+  }
+}
+.letter-form {
+  animation: stationery-turn 0.4s steps(8);
+}
+@keyframes stationery-turn {
+  from {
+    opacity: 0.35;
+    scale: 0.99 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+/* A single open sky, with the mailbox rooted on the crown of the ground. */
+:root {
+  --sky: #cce1e8;
+  --open-time: 2.1s;
+  --delivery-time: 7.2s;
+}
+.our-world {
+  padding: 0;
+  background: var(--sky);
+}
+.our-world:before,
+.our-world:after {
+  content: none;
+}
+.world-header {
+  position: absolute;
+  top: 26px;
+  left: 32px;
+  margin: 0;
+  z-index: 4;
+}
+.wordmark {
+  font-size: 25px;
+  gap: 10px;
+}
+.wordmark svg {
+  width: 12px;
+}
+.world-surface {
+  width: 100%;
+}
+.world-scene {
+  height: 100dvh;
+  min-height: 640px;
+  max-height: none;
+  background: linear-gradient(#c5dfe8, #d6e8ea 72%, #cce1e8);
+}
+.landscape {
+  width: 100%;
+  height: 100%;
+}
+.mailbox-hit {
+  width: 330px;
+  height: 395px;
+  bottom: 23%;
+}
+.mailbox-hit:disabled {
+  opacity: 1;
+}
+.mailbox-hit:hover .mailbox-art {
+  filter: drop-shadow(2px 2px 0 #6b647015);
+}
+.nameplate {
+  bottom: 18%;
+  font-size: 20px;
+  min-width: 110px;
+}
+.mailbox-status {
+  bottom: 6%;
+}
+.mailbox-status > p {
+  font-size: 18px;
+}
+.lock-world {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  z-index: 5;
+  font-size: 14px;
+  padding: 10px;
+}
+.mailbox-flag {
+  transition: transform 0.3s steps(4);
+}
+.is-opening .mailbox-body {
+  animation: mailbox-excited 0.35s steps(3) 1;
+}
+.is-opening .mailbox-door {
+  transform-origin: 36px 68px;
+  animation: door-swing 0.5s steps(5) both;
+}
+.is-opening .open-door {
+  transform-origin: 36px 68px;
+  animation: lid-lower 0.5s steps(5) both;
+}
+.is-opening .mailbox-flag {
+  animation: flag-lower 2.1s steps(4) both;
+}
+.mail-arriving .mailbox-art {
+  animation: none;
+}
+.arrival-burst {
+  top: 45%;
+}
+.arrival-burst i {
+  width: 3px;
+  height: 3px;
+}
+@keyframes door-swing {
+  0%,
+  20% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+@keyframes lid-lower {
+  0%,
+  35% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+@keyframes flag-lower {
+  0%,
+  45% {
+    transform: rotate(0deg);
+  }
+  70%,
+  100% {
+    transform: rotate(90deg);
+  }
+}
+@keyframes arrival-spark {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    translate: calc(var(--i)*7px) -12px;
+  }
+}
+/* The gate is a real focus-trapping dialog, styled as pixel stationery. */
+.passcode-popup[data-slot='dialog-content'] {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid #b79a80;
+  border-radius: 0;
+  width: min(390px, calc(100% - 40px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  padding: 32px 28px;
+  gap: 16px;
+  text-align: center;
+  box-shadow:
+    4px 0 #dfc3a4,
+    -4px 0 #dfc3a4,
+    0 4px #dfc3a4,
+    0 -4px #dfc3a4,
+    7px 7px #68515133;
+  animation: gate-enter 0.25s steps(4);
+}
+.passcode-popup > svg {
+  width: 18px;
+  margin: 0 auto 4px;
+}
+.passcode-popup [data-slot='dialog-title'] {
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+.passcode-popup [data-slot='dialog-description'] {
+  font-size: 16px;
+  color: #7c6260;
+}
+.passcode-gate {
+  position: static;
+  width: 100%;
+  margin: 8px 0 0;
+}
+.passcode-gate label {
+  display: block;
+  text-align: left;
+  font-size: 16px;
+  margin-bottom: 9px;
+}
+.passcode-gate input {
+  display: block;
+  width: 100%;
+  height: 46px;
+  font-size: 20px;
+}
+.passcode-gate button {
+  margin-top: 20px;
+  width: 100%;
+}
+.passcode-popup.gate-error {
+  animation: gate-shake 0.35s steps(4);
+  bottom: auto;
+}
+.passcode-popup[data-closed] {
+  display: none;
+}
+@keyframes gate-enter {
+  from {
+    opacity: 0;
+    margin-top: 6px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+/* Door first, then the envelope leaves the opening and unfolds toward the reader. */
+.opening-animation {
+  background: transparent;
+}
+.opening-animation > svg {
+  top: auto;
+  bottom: calc(23% + 180px);
+  left: calc(50% - 79px);
+  width: 65px;
+}
+.opening-animation .envelope-flap {
+  transform-origin: 24px 5px;
+  animation: reader-flap 2.1s steps(4) both;
+}
+.opening-animation .envelope-seal {
+  animation: reader-seal 2.1s steps(1) both;
+}
+.unfolding-paper {
+  top: calc(50% - 130px);
+}
+@keyframes envelope-to-reader {
+  0%,
+  24% {
+    opacity: 0;
+    scale: 0.5;
+    translate: 0 0;
+  }
+  28% {
+    opacity: 1;
+    scale: 0.5;
+    translate: 0 0;
+  }
+  45% {
+    opacity: 1;
+    scale: 1;
+    translate: -25px 22px;
+  }
+  68%,
+  80% {
+    opacity: 1;
+    scale: 2.7;
+    translate: 46px -15px;
+  }
+  100% {
+    opacity: 0;
+    scale: 2.7;
+    translate: 46px -15px;
+  }
+}
+@keyframes reader-flap {
+  0%,
+  65% {
+    transform: scaleY(1);
+  }
+  78%,
+  100% {
+    transform: scaleY(-1);
+  }
+}
+@keyframes reader-seal {
+  0%,
+  64% {
+    opacity: 1;
+  }
+  65%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes paper-emerge {
+  0%,
+  77% {
+    opacity: 0;
+    scale: 0.7 0.1;
+    translate: 0 60px;
+  }
+  85% {
+    opacity: 1;
+    scale: 0.7 0.4;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+}
+/* Pull away from the same surface, follow a half orbit, then come home. */
+.world-delivering > .landscape {
+  transform-origin: 50% 74%;
+  animation: surface-pull 7.2s steps(24) both;
+}
+.world-delivering > .mailbox-hit {
+  animation: mailbox-pull 7.2s steps(24) both;
+}
+.world-delivering > .nameplate,
+.world-delivering > .mailbox-status,
+.world-delivering > .ambient-pixels {
+  opacity: 0;
+}
+.delivery-paper {
+  top: calc(50% - 150px);
+  animation: paper-fold 1.1s steps(8) both;
+}
+.sealed-letter {
+  position: absolute;
+  top: 47%;
+  left: calc(50% - 45px);
+  width: 90px;
+  animation: seal-and-post 2.4s steps(12) both;
+}
+.sealed-letter .envelope-flap {
+  transform-origin: 24px 5px;
+  animation: seal-flap 1.5s steps(4) both;
+}
+.sealed-letter .envelope-seal {
+  animation: stamp-seal 1.8s steps(3) both;
+}
+.globe-reveal {
+  position: absolute;
+  width: min(300px, 50vw, 38dvh);
+  aspect-ratio: 1;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  animation: reveal-planet 7.2s steps(24) both;
+}
+.tiny-world,
+.planet {
+  width: 100%;
+  height: 100%;
+}
+.tiny-world {
+  position: relative;
+}
+.globe-mailbox {
+  position: absolute;
+  width: 58px;
+  height: 70px;
+  left: calc(50% - 29px);
+}
+.globe-mailbox .mailbox-art {
+  width: 100%;
+  height: 100%;
+}
+.globe-mailbox.sender {
+  bottom: 98%;
+}
+.globe-mailbox.recipient {
+  top: 98%;
+  rotate: 180deg;
+}
+.globe-mailbox span {
+  position: absolute;
+  font-size: 15px;
+  left: 60px;
+  top: 22px;
+}
+.globe-mailbox.recipient span {
+  rotate: 180deg;
+}
+.globe-mailbox.recipient .mailbox-flag {
+  animation: destination-flag 7.2s steps(3) both;
+}
+.globe-mailbox.recipient .open-door {
+  animation: destination-door 7.2s steps(2) both;
+}
+.delivery-heart {
+  position: absolute;
+  width: 9px;
+  left: 58px;
+  top: 5px;
+  animation: destination-heart 7.2s steps(3) both;
+}
+.orbit {
+  position: absolute;
+  width: 142%;
+  height: 142%;
+  left: -21%;
+  top: -21%;
+  animation: orbit-route 7.2s linear both;
+}
+.orbit-envelope {
+  position: absolute;
+  width: 35px;
+  height: 25px;
+  top: -12px;
+  left: calc(50% - 17px);
+  animation: orbit-visible 7.2s steps(1) both;
+}
+.orbit-envelope > svg {
+  width: 100%;
+  animation: envelope-digital 7.2s steps(1) both;
+}
+.orbit-pixels {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  animation: pixels-digital 7.2s steps(1) both;
+}
+.orbit-pixels i {
+  width: 4px;
+  height: 4px;
+  background: #fff4dd;
+  box-shadow: 1px 1px #bd8f80;
+}
+.orbit-pixels i:nth-child(2) {
+  translate: 0 -4px;
+}
+.delivery-caption {
+  top: auto;
+  bottom: 8%;
+}
+.delivery-caption p {
+  font-size: 19px;
+}
+@keyframes surface-pull {
+  0%,
+  23% {
+    scale: 1;
+    opacity: 1;
+  }
+  38%,
+  100% {
+    scale: 0.3;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes mailbox-pull {
+  0%,
+  23% {
+    scale: 1;
+    opacity: 1;
+  }
+  38%,
+  100% {
+    scale: 0.18;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes reveal-planet {
+  0%,
+  24% {
+    scale: 2.2;
+    opacity: 0;
+  }
+  38%,
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+  100% {
+    scale: 2.2;
+    opacity: 0;
+  }
+}
+@keyframes seal-and-post {
+  0%,
+  28% {
+    opacity: 0;
+    scale: 1;
+    translate: 0 0;
+  }
+  45%,
+  73% {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+  95% {
+    opacity: 1;
+    scale: 0.45;
+    translate: -56px 32px;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.45;
+    translate: -56px 32px;
+  }
+}
+@keyframes seal-flap {
+  0%,
+  70% {
+    transform: scaleY(-1);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+@keyframes stamp-seal {
+  0%,
+  85% {
+    opacity: 0;
+    scale: 1.1;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes orbit-route {
+  0%,
+  40% {
+    rotate: 0deg;
+  }
+  91%,
+  100% {
+    rotate: 180deg;
+  }
+}
+@keyframes orbit-visible {
+  0%,
+  39% {
+    opacity: 0;
+  }
+  40%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes envelope-digital {
+  0%,
+  61% {
+    opacity: 1;
+  }
+  62%,
+  69% {
+    opacity: 0;
+  }
+  70%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes pixels-digital {
+  0%,
+  61% {
+    opacity: 0;
+  }
+  62%,
+  69% {
+    opacity: 1;
+  }
+  70%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes destination-flag {
+  0%,
+  92% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
+@keyframes destination-door {
+  0%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes destination-heart {
+  0%,
+  94% {
+    opacity: 0;
+  }
+  97% {
+    opacity: 1;
+    translate: 0 -2px;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+@media (max-width: 700px) {
+  .world-header {
+    top: 22px;
+    left: 22px;
+  }
+  .wordmark {
+    font-size: 23px;
+  }
+  .world-scene {
+    min-height: 620px;
+    height: 100dvh;
+  }
+  .landscape {
+    width: 160%;
+    left: -30%;
+  }
+  .mailbox-hit {
+    width: 300px;
+    height: 359px;
+    bottom: 23%;
+  }
+  .nameplate {
+    bottom: 18%;
+  }
+  .mailbox-status {
+    bottom: 5%;
+  }
+  .mailbox-status > p {
+    font-size: 17px;
+  }
+  .opening-animation > svg {
+    bottom: calc(23% + 165px);
+    left: calc(50% - 73px);
+  }
+  .globe-reveal {
+    width: min(210px, 49vw, 34dvh);
+  }
+  .globe-mailbox {
+    width: 48px;
+    height: 58px;
+    left: calc(50% - 24px);
+  }
+  .globe-mailbox span {
+    left: 48px;
+    font-size: 14px;
+  }
+  .lock-world {
+    right: 14px;
+    top: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world-delivering > .landscape,
+  .world-delivering > .mailbox-hit {
+    opacity: 1;
+  }
+  .sealed-letter,
+  .globe-reveal,
+  .delivery-paper {
+    display: none;
+  }
+  .delivery-caption {
+    background: var(--paper);
+    padding: 12px;
+  }
+}
+.landscape-mobile {
+  display: none;
+}
+@media (max-width: 700px) {
+  .landscape-desktop {
+    display: none;
+  }
+  .landscape-mobile {
+    display: block;
+    width: 100%;
+    left: 0;
+  }
+}
+/* Receipt and the return home wait for the server's confirmation, even on a slow connection. */
+.globe-mailbox.recipient .mailbox-flag {
+  animation: none;
+  transform: rotate(90deg);
+}
+.delivery-complete .globe-mailbox.recipient .mailbox-flag {
+  transform: rotate(0deg);
+}
+.globe-mailbox.recipient .open-door {
+  animation: none;
+}
+.delivery-heart {
+  animation: none;
+  opacity: 0;
+}
+.delivery-complete .delivery-heart {
+  opacity: 1;
+  animation: heart-pulse 0.6s steps(3);
+}
+@keyframes surface-pull {
+  0%,
+  23% {
+    scale: 1;
+    opacity: 1;
+  }
+  44%,
+  100% {
+    scale: 0.3;
+    opacity: 0;
+  }
+}
+@keyframes mailbox-pull {
+  0%,
+  23% {
+    scale: 1;
+    opacity: 1;
+  }
+  44%,
+  100% {
+    scale: 0.18;
+    opacity: 0;
+  }
+}
+@keyframes reveal-planet {
+  0%,
+  24% {
+    scale: 2.2;
+    opacity: 0;
+  }
+  44%,
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+.world-delivered > .landscape {
+  animation: surface-home 1.2s steps(12) both;
+}
+.world-delivered > .mailbox-hit {
+  animation: mailbox-home 1.2s steps(12) both;
+}
+.delivery-complete .globe-reveal {
+  animation: planet-home 1.2s steps(12) both;
+}
+@keyframes surface-home {
+  0%,
+  30% {
+    scale: 0.3;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes mailbox-home {
+  0%,
+  30% {
+    scale: 0.18;
+    opacity: 0;
+  }
+  100% {
+    scale: 1;
+    opacity: 1;
+  }
+}
+@keyframes planet-home {
+  0%,
+  30% {
+    scale: 1;
+    opacity: 1;
+  }
+  100% {
+    scale: 2.2;
+    opacity: 0;
+  }
+}
+/* Shared reference sprite: hinge and door pivot stay fixed in every size. */
+.mailbox-flag {
+  transform-origin: 67px 49px;
+}
+.is-opening .mailbox-door,
+.is-opening .open-door {
+  transform-origin: 38px 76px;
+}

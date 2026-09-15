@@ -1,0 +1,91 @@
+.animal-world {
+  display: contents;
+}
+.animal-actor {
+  position: absolute;
+  pointer-events: none;
+}
+.animal-touch {
+  position: absolute;
+  inset: 0;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  pointer-events: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.animal-touch:disabled {
+  opacity: 1;
+  cursor: default;
+  pointer-events: none;
+}
+.animal-touch:focus-visible {
+  outline: 2px dashed #68525f;
+  outline-offset: -10px;
+}
+.animal-sprite {
+  display: block;
+  width: 80px;
+  height: 80px;
+  background-repeat: no-repeat;
+  background-size: 1280px 80px;
+  image-rendering: pixelated;
+}
+.animal-shadow {
+  position: absolute;
+  width: 30px;
+  height: 4px;
+  background: #526c49;
+  box-shadow:
+    4px -2px #526c49,
+    -4px -2px #526c49;
+  top: 71px;
+  left: 26px;
+}
+.bird-actor .animal-shadow {
+  width: 20px;
+  left: 30px;
+  top: 73px;
+}
+.animal-grass {
+  position: absolute;
+  width: 2px;
+  height: 6px;
+  left: 29px;
+  top: 69px;
+  background: #8aa368;
+  box-shadow:
+    5px 3px #78935e,
+    23px 2px #8aa368;
+  pointer-events: none;
+}
+.animal-seed {
+  position: absolute;
+  width: 3px;
+  height: 2px;
+  background: #bf9862;
+  left: 63px;
+  top: 73px;
+  box-shadow: 7px 3px #a6845e;
+}
+.animal-symbol {
+  position: absolute;
+  left: 54px;
+  top: -4px;
+  color: #8b5361;
+  font-size: 17px;
+  line-height: 18px;
+  pointer-events: none;
+}
+.animals-paused .animal-sprite {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animal-actor,
+  .animal-sprite {
+    transition: none;
+    animation: none;
+  }
+}

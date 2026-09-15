@@ -1,0 +1,149 @@
+.stationery-layout {
+  grid-template-columns: minmax(0, 1fr) 108px;
+  width: min(100%, calc((100dvh - 170px) * 0.78947 + 123px));
+}
+.editor-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.editor-rail .paper-tools {
+  margin-top: 0;
+}
+@media (min-width: 601px) {
+  .editor-rail .paper-tool {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 7px;
+    min-height: 44px;
+    line-height: 1.15;
+  }
+  .editor-rail .history-tools .paper-tool {
+    min-height: 32px;
+  }
+}
+.object-adjust {
+  padding: 8px;
+  border: 2px solid #aa8978;
+  background: #f7ecd7;
+  box-shadow: 3px 3px #755b4933;
+  gap: 5px;
+}
+.object-adjust-title {
+  grid-column: 1/-1;
+  color: #705456;
+  font-size: 13px;
+  line-height: 1.25;
+  text-align: center;
+  padding-bottom: 5px;
+}
+.object-adjust button {
+  min-height: 34px;
+  border: 1px solid #c6a88e;
+  background: #ecdbc0;
+}
+.object-adjust button:hover {
+  background: #e4c8ae;
+}
+.letter-object.object-selected {
+  outline: 1px dashed #987973;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 3px #f8ecd644;
+}
+.letter-object img {
+  image-rendering: pixelated;
+}
+.editor-trash-slot {
+  align-self: start;
+  margin: 0 auto;
+  width: 64px;
+  height: 62px;
+}
+.editor-trash-slot .letter-trash {
+  position: relative;
+  inset: auto;
+  width: 64px;
+  height: 62px;
+  scale: 1;
+  translate: 0;
+  padding: 5px;
+  background: #e3cfb6;
+  opacity: 0.55;
+}
+.editor-trash-slot .letter-trash.trash-available {
+  opacity: 0.85;
+}
+.editor-trash-slot .letter-trash span {
+  font-size: 12px;
+}
+.builtin-sticker-tray {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 4px 0 14px;
+}
+.builtin-sticker-tray button {
+  border: 1px solid #c6a88e;
+  padding: 3px;
+  background: #fff4df;
+}
+.builtin-sticker-tray button:hover {
+  background: #e9d2bd;
+}
+.builtin-sticker-tray img {
+  width: 100%;
+  image-rendering: pixelated;
+}
+.tool-panel.panel-sticker {
+  width: 240px;
+}
+@media (max-width: 600px) {
+  .stationery-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px;
+    gap: 12px;
+  }
+  .paper-sheet {
+    grid-column: 1/-1;
+    justify-self: center;
+    width: min(100%, calc((100dvh - 285px) *0.78947));
+  }
+  .editor-rail {
+    grid-column: 1/-1;
+    gap: 10px;
+    width: 100%;
+  }
+  .object-adjust {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+    gap: 8px;
+  }
+  .object-adjust-title {
+    grid-column: 1/-1;
+    padding: 0;
+  }
+  .object-adjust button {
+    width: 100%;
+  }
+  .editor-trash-slot {
+    margin: 0 auto;
+  }
+  .editor-rail .paper-tools {
+    order: 0;
+  }
+  .editor-rail .object-adjust {
+    order: 1;
+  }
+  .editor-rail .editor-trash-slot {
+    order: 2;
+  }
+  .is-reading .stationery-layout,
+  .showing-preview .stationery-layout {
+    display: flex;
+  }
+  .is-reading .paper-sheet,
+  .showing-preview .paper-sheet {
+    width: min(100%, calc((100dvh - 145px) *0.78947));
+  }
+}

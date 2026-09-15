@@ -1,0 +1,171 @@
+/* The scene and its controls use the same limited material palette. */
+.our-world .world-scene {
+  background-image: none;
+  min-height: 0;
+}
+.our-world .mailbox-hit {
+  width: 336px;
+  height: 402px;
+}
+.our-world .mailbox-art {
+  image-rendering: pixelated;
+  filter: brightness(var(--sprite-light, 1))
+    saturate(var(--sprite-saturation, 1));
+  transition: filter 10s steps(8);
+}
+.our-world .mailbox-hit:hover .mailbox-art {
+  transform: none;
+  filter: brightness(calc(var(--sprite-light, 1) + 0.04))
+    saturate(var(--sprite-saturation, 1));
+}
+.our-world .mailbox-body {
+  animation: none;
+}
+.our-world .mailbox-art .mailbox-sprite,
+.delivery-world .mailbox-art .mailbox-sprite {
+  image-rendering: pixelated;
+  animation: none;
+  transform: none;
+}
+.mailbox-art {
+  overflow: visible;
+}
+.our-world .mailbox-hit:hover .mailbox-letter {
+  translate: none;
+}
+.our-world .celestial-sun {
+  width: 96px;
+  height: 96px;
+}
+.sun-radiance {
+  animation: sun-warmth 8s steps(4) infinite alternate;
+}
+@keyframes sun-warmth {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.06);
+  }
+}
+.world-ground-art,
+.ground-extension {
+  filter: brightness(var(--ground-light, 1))
+    saturate(var(--sprite-saturation, 1));
+  transition: filter 10s steps(8);
+  image-rendering: pixelated;
+}
+.sky-clouds {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.sky-clouds img {
+  position: absolute;
+  image-rendering: pixelated;
+  filter: brightness(var(--ground-light, 1))
+    saturate(var(--sprite-saturation, 1));
+  animation: world-cloud-drift 32s steps(16) infinite alternate;
+  transition: filter 10s steps(8);
+}
+@keyframes world-cloud-drift {
+  from {
+    transform: translateX(-8px);
+  }
+  to {
+    transform: translateX(8px);
+  }
+}
+.our-world .nameplate {
+  border: 2px solid #252238;
+  box-shadow: 3px 3px #252238;
+  padding: 5px 18px;
+  background: #f4e9ce;
+  color: #252238;
+}
+.our-world .world-clock {
+  border: 2px solid #252238;
+  box-shadow: 3px 3px #252238;
+}
+.our-world .ambient-pixels {
+  display: none;
+}
+.passcode-popup[data-slot='dialog-content'] {
+  border: 3px solid #252238;
+  background: #f4e9ce;
+  background-image: none;
+  color: #252238;
+  box-shadow: 5px 5px #252238;
+}
+.stationery-set .paper-sheet {
+  box-shadow:
+    3px 0 #252238,
+    -3px 0 #252238,
+    0 3px #252238,
+    0 -3px #252238,
+    6px 6px #252238;
+}
+.stationery-set .turn-front,
+.stationery-set .turn-back {
+  background: #f4e9ce;
+}
+.stationery-set .paper-tool {
+  border-color: #4b568e;
+  background: #f4e9ce;
+  color: #252238;
+  border-radius: 0;
+}
+.stationery-set .paper-tool.tool-selected {
+  background: #adc0d1;
+  border-color: #252238;
+  box-shadow: 2px 2px #252238;
+}
+.our-world .pixel-button,
+.stationery-set .pixel-button {
+  background: #f4e9ce;
+  border: 2px solid #252238;
+  color: #252238;
+  box-shadow: 3px 3px #252238;
+  border-radius: 0;
+}
+.our-world .pixel-button:hover,
+.stationery-set .pixel-button:hover {
+  background: #d1b598;
+}
+@media (max-width: 700px) {
+  .our-world {
+    --celestial-clearance: 96px;
+  }
+  .our-world .celestial-sun {
+    width: 72px;
+    height: 72px;
+  }
+  .our-world .mailbox-hit {
+    width: 224px;
+    height: 268px;
+  }
+  .sky-clouds img {
+    width: 96px;
+    height: 60px;
+  }
+}
+@media (max-width: 360px), (max-height: 640px) {
+  .our-world .mailbox-hit {
+    width: 224px;
+    height: 268px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sun-radiance {
+    animation: none;
+  }
+  .our-world .mailbox-art {
+    transition: none;
+  }
+  .world-ground-art,
+  .ground-extension,
+  .sky-clouds img {
+    transition: none;
+    animation: none;
+  }
+}

@@ -1,0 +1,103 @@
+/* Open controls over the world, shared by reading, writing and preview. */
+.stationery.stationery-set .stationery-footer.letter-menu {
+  display: grid;
+  grid-column: 1;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  /* Preserve the old inset and footprint without painting a panel. */
+  padding: 8px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #f4e9ce;
+  text-shadow:
+    1px 1px #151420,
+    -1px 0 #151420,
+    0 -1px #151420;
+}
+.letter-menu-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.letter-menu button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #151420;
+  border-radius: 0;
+  background: #f4e9ce;
+  box-shadow: 2px 2px #151420;
+  color: #252238;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+  text-shadow: none;
+  white-space: nowrap;
+}
+.letter-menu button svg {
+  width: 14px;
+  height: 14px;
+}
+.letter-menu button:hover:not(:disabled) {
+  background: #d1b598;
+}
+.letter-menu button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.letter-menu button:focus-visible {
+  outline: 2px solid #ffd257;
+  outline-offset: 3px;
+}
+.letter-menu-pages {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.letter-menu-pages button {
+  min-height: 28px;
+  min-width: 30px;
+  padding: 2px 7px;
+}
+.letter-menu-hint,
+.letter-menu-error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+  color: #f4e9ce;
+}
+.letter-menu-error {
+  color: #ffcfbc;
+}
+@media (max-width: 600px), (max-height: 650px) {
+  .stationery.stationery-set .stationery-footer.letter-menu {
+    width: min(100%, calc((100dvh - 290px) *0.78947));
+    margin-top: 0;
+    order: 3;
+  }
+  .stationery.stationery-set.is-reading .stationery-footer.letter-menu,
+  .stationery.stationery-set.showing-preview .stationery-footer.letter-menu {
+    width: min(100%, calc((100dvh - 140px) *0.78947));
+  }
+  .letter-menu-actions button {
+    min-height: 40px;
+    padding: 7px 8px;
+  }
+}
+@media (max-width: 600px) {
+  .stationery.stationery-set .stationery-footer.letter-menu {
+    grid-column: 1 / -1;
+  }
+}

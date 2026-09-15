@@ -1,0 +1,83 @@
+.letter-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 600/760;
+  grid-column: 1;
+  isolation: isolate;
+}
+.envelope-paper-window {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.physical-sheet {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+.physical-sheet .paper-sheet {
+  width: 100%;
+}
+.physical-envelope {
+  position: absolute;
+  left: 10%;
+  top: var(--envelope-y);
+  width: 80%;
+  height: auto;
+  overflow: visible;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.envelope-back {
+  z-index: 1;
+}
+.envelope-front {
+  z-index: 3;
+}
+.physical-flap {
+  z-index: 4;
+}
+.physical-flap.flap-behind {
+  z-index: 1;
+}
+.envelope-in-motion {
+  overflow: hidden;
+}
+.envelope-in-motion .envelope-paper-window {
+  clip-path: inset(0 0 var(--paper-clip) 0);
+}
+.envelope-in-motion .physical-sheet {
+  transform: translate(var(--sheet-x), var(--sheet-y)) scale(var(--sheet-scale));
+}
+.envelope-in-motion .letter-preview {
+  image-rendering: pixelated;
+}
+.envelope-in-motion .paper-close {
+  visibility: hidden;
+}
+.stationery.stationery-set[data-slot='dialog-content'] {
+  animation: none;
+  transition: none;
+}
+.stationery.in-envelope-motion .stationery-footer {
+  visibility: hidden;
+  pointer-events: none;
+}
+.stationery.in-envelope-motion .editor-rail {
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (max-width: 600px) {
+  .letter-stage {
+    grid-column: 1/-1;
+    justify-self: center;
+    width: min(100%, calc((100dvh - 360px) * 0.78947));
+  }
+  .is-reading .letter-stage,
+  .showing-preview .letter-stage {
+    width: min(100%, calc((100dvh - 145px) * 0.78947));
+  }
+  .physical-sheet .paper-sheet {
+    width: 100%;
+  }
+}
