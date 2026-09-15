@@ -232,8 +232,9 @@ export function useMailbox(owner: Owner) {
   const compose = () => {
     if (phaseRef.current !== 'idle' && phaseRef.current !== 'reading') return;
     const current = snapshotRef.current?.latest;
+    if (snapshotRef.current?.waiting) return;
     if (current && (current.sender === owner || !current.read_at)) return;
-    replyTo.current = current?.id ?? null;
+    replyTo.current = current?.id ?? snapshotRef.current?.reply_to ?? null;
     setError('');
     if (phaseRef.current === 'reading') {
       composeAfterClosing.current = true;

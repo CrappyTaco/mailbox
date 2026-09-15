@@ -1,14 +1,14 @@
 # Our Mailbox
 
-A little world for Indi and Auggie. Open `/indi` or `/auggie` and pass one letter back and forth. No password is needed.
+A little world for Indi and Auggie. Open `/indi` or `/auggie` and pass one letter back and forth. The existing artwork, stationery, routes, user names, read state, reply sequence and delivery animations are preserved.
 
-The app includes original pixel artwork, a local-time sky for each world, an animated mailbox, four aging stages, paper stationery, an opening sequence, and a continuous envelope journey around a lit and shadowed globe. Incoming mail updates every four seconds while the page is visible. All saved letters remain in the database.
+**Storage: browser → existing `mailbox` Cloudflare Worker (Vinext) → Cloudflare D1.** All letter reads and writes use the server-only `MAILBOX_DB` binding. There is no external database client or HTTP database bridge.
 
-The scene now uses the supplied day/night artwork directly: full-resolution reference crops preserve the exact mailbox, distinct clouds, hills, trees, flowers, grass, rock and path. The mailbox's original front panel and flag poses remain animated, with a shared physical entrance mask for retrieval and the delivery globe. Small masked ImageGen repairs fill the areas exposed behind flags and the old example clock. Both city clocks remain live. A proportionate scene preserves desktop composition and crops naturally on phones. Artwork provenance and exact generation prompts are in `public/world/ARTWORK.md` and `public/world/reference/PROMPTS.md`.
+**Access is intentionally public, as requested.** Anyone who can reach the site can use either mailbox. The mailbox URL chooses Indi or Auggie; it is not proof of identity. No session or passcode is required. Server-side mailbox and deletion checks do not provide privacy between people who can select either URL. The existing unused passcode/session helpers remain available, with their tests, but are not an access gate.
 
 ## Local development
 
-Use Node.js 24 LTS and pnpm. From this directory:
+Use Node.js 24 and pnpm 11.19.0. Run from the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -16,20 +16,18 @@ pnpm setup:local
 pnpm dev
 ```
 
-Open [Indi](http://localhost:3000/indi) or [Auggie](http://localhost:3000/auggie). Both mailboxes open immediately without a code. Existing settings and letters are preserved when setup runs again.
+Open [Indi](http://localhost:3000/indi) or [Auggie](http://localhost:3000/auggie). Setup writes local origin settings to ignored `.env.local` and `.dev.vars` files and applies D1 migrations. It does not seed mail, reset existing mail, or require a cloud account. Wrangler and the Vite plugin persist actual local D1 at `.wrangler/state/v3/d1`; `preview_database_id: mailbox-local` keeps that store stable when the production database ID changes.
 
-The preview uses **PGlite: the actual PostgreSQL engine compiled to WebAssembly**, running in a separate Node process. It persists to `.local/postgres`; it is not a browser-storage mock. A bearer-protected, loopback-only HTTP bridge exposes the same four PostgreSQL functions used through Supabase in production. Docker and a cloud account are unnecessary for this preview.
+Apply new local migrations with `pnpm db:migrate:local`. `pnpm dev` builds and opens a local production-runtime preview; restart it after editing source. `pnpm dev:vinext` provides hot reload, but startup is unusually slow in this Windows workspace. Both use the same local D1 store. The old native Next.js/database-bridge fallback has been retired. Next.js remains installed for route types and API compatibility.
 
-`pnpm dev` starts the database bridge at `127.0.0.1:55432` and Vinext at `localhost:3000`. Use **localhost** in the browser so the configured request origin matches. Stop with Ctrl+C. Only one process may open this PGlite data directory at a time.
-
-For the current working preview on port 3100, run these in separate terminals instead (do not start a second copy if these ports are already running):
+For a compiled preview:
 
 ```sh
-pnpm db:local
-node scripts/preview-next.mjs
+pnpm build:cloudflare
+pnpm preview:cloudflare
 ```
 
-Open [Indi](http://localhost:3100/indi) or [Auggie](http://localhost:3100/auggie). This launcher sets the correct origin and preserves literal separators in saved password hashes when Next expands environment values. The same routes, styles, security, database functions, and components work in both development modes. This fallback is used because the installed native workerd executable currently exits before starting; the production Worker build still succeeds.
+Stop the development server before reusing port 3000. `node scripts/verify-worker.mjs --serve` offers a compiled preview on port 3100 using the same local D1. No separate database process is needed.
 
 ## How the exchange works
 
@@ -41,13 +39,13 @@ Open [Indi](http://localhost:3100/indi) or [Auggie](http://localhost:3100/auggie
 - Arrival waits for the database to confirm the write. “Delivered” appears after the arrival sequence finishes.
 - The latest sender waits for a reply. There is no inbox, archive screen, or chat UI.
 
-The personal preview contains only retained user mail. Known development messages were removed; the app has no mock inbox, seeded letters, fallback messages or fake return shortcuts. Historical personal letters remain in PostgreSQL, while the mailbox shows only the current exchange. Automated and browser checks use a separate QA database and port. Drafts stay in memory while the page remains open; they are deliberately not saved to shared browser storage. Leaving with an unsent draft prompts the browser.
+The personal preview contains only retained user mail. Known development messages were removed; the app has no mock inbox, seeded letters, fallback messages or fake return shortcuts. Historical personal letters remain in D1, while the mailbox shows only the current exchange. Automated and browser checks use a separate QA database and port. Drafts stay in memory while the page remains open; they are deliberately not saved to shared browser storage. Leaving with an unsent draft prompts the browser.
 
 The compact toolbar sits to the right of the paper on desktop and below it on phones. Greeting, body and signature are editable text fields, each with its own font, size and ink color. Choose from Pixelify, Caveat, Special Elite and Lora. Sending requires a typed or drawn signature and an actual stamp placed on the paper; the server enforces postage too. Drawing remains available anywhere on the paper.
 
 Add any of ten original perforated postage stamps or ten original pixel stickers, or upload PNG, JPEG and WebP images as stickers. Each new object appears in the center and can be dragged independently, resized proportionally, rotated, or dropped into the animated trash target directly beneath the selected-object controls, outside the paper. Selected objects have a subtle outline and a separate adjustment panel; these controls never appear in preview or sent letters. Uploaded stickers have a white border around their visible silhouette. Arrow keys move selected objects, Shift moves farther, and Delete removes them. Undo/redo supports text, styles, additions, moves, removals, drawing and erasing, with one history step per pointer gesture. Ctrl/Cmd+Z and Shift+Ctrl/Cmd+Z work inside the editor.
 
-The marker retains seven ink colors, three sizes and its geometric eraser. Closing and reopening preserves the full draft during the active page session. Sent artwork is saved with its letter in PostgreSQL. Preview shows the recipient's exact rendering; long bodies continue onto additional sheets, with the typed signature on the final sheet. Received letters offer **Download PDF**, using the same renderer and local fonts to preserve paper, fold, text, objects and ink. PDF pages contain a high-resolution image of the physical sheet; they are keepsakes rather than editable text documents. Regenerate stamp artwork with `pnpm sprites:stamps`.
+The marker retains seven ink colors, three sizes and its geometric eraser. Closing and reopening preserves the full draft during the active page session. Sent artwork is saved with its letter in D1. Preview shows the recipient's exact rendering; long bodies continue onto additional sheets, with the typed signature on the final sheet. Received letters offer **Download PDF**, using the same renderer and local fonts to preserve paper, fold, text, objects and ink. PDF pages contain a high-resolution image of the physical sheet; they are keepsakes rather than editable text documents. Regenerate stamp artwork with `pnpm sprites:stamps`.
 
 Long letters paginate as you type. Previous/next controls and Page Up/Page Down turn real sheets in both editing and reading. The greeting appears only on page one, with more writing room on continuation pages; the typed signature appears on the final sheet. Text reflows after insertion, deletion, or font changes. A sheet with artwork is retained even when its text moves away, so decorations are never discarded by repagination. Stamps, stickers and ink use coordinates local to their page, including in preview, saved letters and PDF export. Version 3 stores exact text ranges alongside page indices; older document versions remain readable without rewriting them.
 
@@ -76,216 +74,104 @@ Toffee, Squashy, Wilfred, Lady, Earl, Nibbler and Noddle occasionally visit both
 
 Seven original transparent sprite sheets use a shared 40-pixel frame grid and fixed character markings. The [sprite specification](components/animals/SPRITES.md) documents the art system, director and local event/reaction query overrides. Run `pnpm sprites:animals` to regenerate the assets.
 
-## Supabase setup
+## D1 schema and behavior
 
-Create or choose a Supabase project and install the official Supabase CLI. From this source directory:
+`migrations/0001_mailbox.sql` creates:
+
+- `letters`: UUID text ID, `sender_id`, `recipient_id`, optional subject, body, UTC creation/delivery/read timestamps, reply UUID, unique sender/client request ID, JSON artwork, and separate sender/recipient soft deletion flags.
+- Inbox and sent indexes by owner and newest creation date.
+- `mailbox_world`: the existing exchange's current letter pointer and original establishment date.
+- Two insert triggers that validate the current turn and advance the pointer atomically. They replace the previous row-lock behavior, including concurrent first sends and replies.
+
+UUIDs and artwork versions 1–3 are retained. D1 prepared statements bind all request values. The fixed opposite mailbox is the recipient; the strict API schema rejects submitted sender/recipient overrides. Retry IDs prevent duplicate sends and reject changed content. Reads only mark the recipient's copy; opening sent mail does not mark it read. Deleting one copy hides only that mailbox's copy. Deleting the current incoming letter permits the next reply without resurrecting its content, while the latest sender still waits for a response.
+
+Bodies allow 1–20,000 characters. The HTTP body is capped at 2,000,000 bytes and serialized artwork at 1,900,000 bytes to leave room below [D1's 2 MB row limit](https://developers.cloudflare.com/d1/platform/limits/). Large uploaded images may need to be reduced.
+
+### API routes
+
+Every API validates the owner against `indi` and `auggie`. All responses are private/no-store. Mutations require an exact matching `Origin`; payloads are streamed with size limits and strictly validated. Text renders as React text, never raw HTML. D1 is never exposed to client JavaScript.
+
+| Method and route                             | Behavior                                                               |
+| -------------------------------------------- | ---------------------------------------------------------------------- |
+| GET `/api/:owner/letters`                    | Current exchange snapshot used by the existing UI                      |
+| POST `/api/:owner/letters`                   | Send signed/stamped artwork; `reply_to` preserves the exchange         |
+| GET `/api/:owner/letters?box=inbox&offset=0` | Up to 20 incoming letters, newest first                                |
+| GET `/api/:owner/letters?box=sent&offset=0`  | Up to 20 sent letters, newest first                                    |
+| POST `/api/:owner/letters/:id`               | Open a visible sender or recipient copy; marks read only for recipient |
+| POST `/api/:owner/letters/read`              | Existing recipient-only read action with `{id}`                        |
+| DELETE `/api/:owner/letters/:id`             | Soft-delete only the selected mailbox's copy; repeating is harmless    |
+
+The existing site has no Sent screen, inbox list, archive, or chat UI. Inbox/sent listing and per-copy deletion are provided through the API without redesigning that experience. Reply remains part of the existing stationery flow.
+
+## Runtime configuration and diagnostics
+
+| Setting                    | Value                         |
+| -------------------------- | ----------------------------- |
+| Worker                     | `mailbox` (existing project)  |
+| D1 binding                 | `MAILBOX_DB`                  |
+| D1 database name           | `mailbox-db`                  |
+| Production `APP_ORIGIN`    | `https://auggieisromantic.uk` |
+| Production `LOCAL_PREVIEW` | `false`                       |
+
+The database ID placeholder in `wrangler.jsonc` must be replaced before deployment. No database URL, service credential, session secret or passcode hash is required. `cloudflare-env.d.ts` types the binding as `D1Database`.
+
+Observability stays enabled. In Worker logs, `mailbox_database_failed` reports a safe code and operation: `d1_binding_missing` means the binding is absent, `d1_migrations_missing` means the schema is absent, and `d1_unavailable` means the D1 operation failed. Raw SQL, exceptions, mail bodies and credentials are not logged or returned. The UI retains its retry button, polling recovery and outage backoff.
+
+## Production setup and deployment
+
+See [the numbered Cloudflare checklist](docs/d1-deployment.md), including how to restore the prepared private 30-letter backup. Cloudflare CLI was not authenticated during this migration, so no remote database was created and production was not deployed.
+
+For an empty production mailbox, after replacing the database ID:
 
 ```sh
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase db push --dry-run
-supabase db push
+pnpm db:migrate:production
+pnpm build:cloudflare
+pnpm deploy:cloudflare
 ```
 
-These are the official [Supabase migration workflow](https://supabase.com/docs/guides/deployment/database-migrations) commands. This task did not create a cloud project or send local letters to Supabase.
+The build produces `dist/server/wrangler.json`, `dist/server/index.js` and `dist/client/`. Deploy the generated configuration. `keep_vars: true` preserves dashboard variables; secrets also survive deployment. Remove retired database secrets from the existing Worker's settings after migration.
 
-Record the project URL and its server-side service-role key for the Worker secrets. Never use the service-role key in a `NEXT_PUBLIC_` variable.
+Workers Builds settings remain: repository `CrappyTaco/mailbox`, branch `main`, root `/`, build `pnpm run build`, deploy `pnpm exec wrangler deploy --config dist/server/wrangler.json --keep-vars`, `NODE_VERSION=24.19.0`, `PNPM_VERSION=11.19.0`. Apply production migrations before deploying schema-dependent code. Keep `pnpm-workspace.yaml` and its existing build-script permissions.
 
-## Environment variables
-
-| Variable                    | Purpose                                                                            |
-| --------------------------- | ---------------------------------------------------------------------------------- |
-| `APP_ORIGIN`                | Exact browser origin, without a trailing slash or path. Production must use HTTPS. |
-| `SUPABASE_URL`              | Supabase project HTTPS URL; generated loopback URL in local preview.               |
-| `SUPABASE_SERVICE_ROLE_KEY` | Privileged server-side database credential.                                        |
-| `LOCAL_PREVIEW`             | `true` only for the isolated local database; `false` in production.                |
-
-`.env.example` contains no credentials. Local setup writes `.env.local` for Next.js and local scripts, and `.dev.vars` for Vinext/Workers. If you edit local settings, update both files and restart the server.
-
-Production requires database configuration and HTTPS origins. `LOCAL_PREVIEW=true` additionally requires both the app and database to use loopback hostnames.
-
-Password access has been removed. Both mailbox pages and their letter APIs are open without a code or session cookie. Old passcode hashes and session secrets in existing local configuration are unused and are no longer required.
-
-## Database migration
-
-`supabase/migrations/202609050001_mailbox.sql` creates:
-
-- Permanent letters with UUIDs, recipient/sender checks, body limits, timestamps, reply references, and unique client request IDs.
-- A singleton world row that serializes sends using a PostgreSQL row lock.
-- Persistent authentication attempt limits.
-- Indexes for conversation chronology, latest incoming letters, and unread letters.
-- Four narrowly scoped server functions; no arbitrary-query API.
-- RLS and revoked access for anonymous/authenticated browser roles.
-
-`supabase/migrations/202609060001_letter_art.sql` adds nullable artwork, includes the latest received letter in snapshots, and saves artwork atomically with each send. Existing letters and older clients remain compatible. Artwork uses a bounded 600 × 760 coordinate space, one stamp, and validated stroke colors, widths and point limits.
-
-`supabase/migrations/202609060002_letter_objects.sql` accepts the version 2 document format: independently styled text fields, multiple individually identified objects, bounded PNG sticker data, and editable ink geometry. Version 1 letters remain readable and exportable. New API requests strictly validate the complete document and its matching body text before saving.
-
-The local preview applies all migration files in order, recording each applied migration. Add new migration files for later schema changes; do not rewrite an applied migration.
-
-A unique request ID makes retries idempotent, including when the server saved a letter but the browser missed the response. Concurrent first sends cannot overwrite each other. The server selects the sender from the validated mailbox URL, never a submitted sender field.
-
-## Privacy and accessibility
-
-Anyone who can reach the site can open either mailbox and use its letter interactions. There is no password prompt. Database credentials remain server-side.
-
-Every mutation checks the exact request Origin. JSON payloads are limited while reading the stream, then strictly validated. Letter bodies render as React text, never raw HTML. API responses are private and not cached. Request errors never return database credentials or database error details.
-
-The paper uses the existing accessible dialog primitive with custom stationery styling, a focus trap, Escape dismissal, and focus return to the mailbox. Buttons and text fields support keyboard use; long letters can be focused and scrolled. Reduced-motion preferences stop ambient animation and simplify opening/delivery. No sound autoplays.
-
-## Production build
+## Verification
 
 ```sh
 pnpm typecheck
 pnpm lint
 pnpm test
-pnpm build:next
 pnpm build:cloudflare
 pnpm verify:build
-```
-
-The normal Next.js output is `.next/`. The Worker build produces `dist/server/index.js`, its generated Wrangler configuration, and `dist/client/` assets. The secret scan checks that local private values were not embedded in the build.
-
-The Cloudflare path follows the [current Cloudflare Next.js guidance](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/), checked September 5, 2026: Vinext is the recommended default. Vinext is beta; this repository pins the tested release. The compatibility date is pinned to May 15, 2026 to match the installed Worker runtime. Native Next.js remains available.
-
-## Cloudflare Workers preview
-
-Keep the local database running, stop the development web server, and run:
-
-```sh
-pnpm build:cloudflare
-pnpm preview:cloudflare
-```
-
-The preview helper copies ignored local variables beside the generated Wrangler configuration; these files are never part of the source archive.
-
-A repeatable smoke test also runs the compiled module directly in Cloudflare's workerd runtime through Miniflare:
-
-```sh
+pnpm verify:worker-config
 pnpm verify:worker
+pnpm test:e2e
 ```
 
-It tests page rendering, font assets, password-free mailbox endpoints and database access, then shuts down. The database bridge must be running. Port 3100 must be free. To leave this production-runtime preview open:
+The unit/integration suite runs 98 tests, including actual Miniflare D1 persistence, artwork versions 1–3, concurrency, idempotency, inbox/sent ordering, per-copy deletion and atomic backup imports. Existing art, animation, validation, session-helper and public-access checks remain. `pnpm test:local` runs the same suite with the bundled TypeScript loader for restricted Windows environments.
+
+`pnpm test:e2e` starts a disposable compiled Worker and actual D1 on port 3101, exercises the entire exchange and delete APIs, then shuts down. It never touches personal local or production data. `verify:worker-config` checks the compiled Worker with missing binding/schema and production-style D1 bindings. `verify:worker` renders both pages and checks font and mailbox endpoints using disposable D1.
+
+## Backups and local maintenance
+
+The migration retained the original local database directory and created `.local/letters-export.json` before importing all 30 letters into local D1. A field-by-field check confirmed IDs, body, dates, replies, retry IDs and artwork. `.local/mailbox-d1.sql` is a complete private D1 export; its restoration into a fresh isolated D1 database was also verified. These files are ignored by Git.
+
+Create a fresh JSON backup with `pnpm export:local`; it writes `.local/d1-letters-export.json`. Import a JSON backup into an **empty local D1** with `pnpm import:local .local/d1-letters-export.json`. Imports run atomically, preserve the world pointer, and refuse nonempty destinations. The importer only uses local D1.
+
+Create a SQL backup with:
 
 ```sh
-node scripts/verify-worker.mjs --serve
+pnpm exec wrangler d1 export MAILBOX_DB --local --config wrangler.jsonc --output .local/mailbox-d1.sql
 ```
 
-This alternative is useful in restricted Windows environments where Wrangler's auxiliary bundler cannot inspect parent directories.
+The SQL export includes schema, triggers and migration history; restore it only into an empty database. Do not commit backups or upload them to public repositories. Local mail is not transferred by a Git push or deployment.
 
-## Cloudflare Workers deployment
-
-The production site is [auggieisromantic.uk](https://auggieisromantic.uk), deployed from `CrappyTaco/mailbox` on `main` through Workers Builds. For a new installation:
-
-1. Apply the Supabase migration.
-2. Choose the Worker name and hostname. `wrangler.jsonc` includes the production `APP_ORIGIN` and `LOCAL_PREVIEW="false"`; update the origin if using a different domain.
-3. Run `pnpm build:cloudflare`.
-4. Authenticate with `pnpm exec wrangler login`.
-5. Deploy the generated output with `pnpm deploy:cloudflare`.
-6. Set the two database secrets below, then verify both mailbox routes.
-
-Until all secrets are configured, private APIs return a friendly unavailable state and reveal no letters. Changing the custom domain also requires updating `APP_ORIGIN` and rebuilding/redeploying the configuration.
-
-## How to set production secrets
-
-Run each command from the project directory and enter the value into the prompt:
-
-```sh
-pnpm exec wrangler secret put SUPABASE_URL --config dist/server/wrangler.json
-pnpm exec wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config dist/server/wrangler.json
-```
-
-Wrangler stores these as Worker secrets; `secret put` deploys an updated version. See [Cloudflare secrets](https://developers.cloudflare.com/workers/configuration/secrets/). Do not copy `.env.local`, `.dev.vars`, or LOCAL-ACCESS.md to a public repository. Generate production credentials independently of local preview credentials.
-
-### Deploy from GitHub with Workers Builds
-
-Connect `CrappyTaco/mailbox` using [Cloudflare Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/). This is a server-rendered application with database-backed API routes, so use Workers rather than a static Pages deployment.
-
-| Setting | Value |
-| --- | --- |
-| Worker name | `mailbox` (matches `wrangler.jsonc` and the connected Cloudflare Worker) |
-| Production branch | `main` |
-| Root directory | Repository root (`/`) |
-| Build command | `pnpm run build` |
-| Deploy command | `pnpm exec wrangler deploy --config dist/server/wrangler.json --keep-vars` |
-| Generated output | `dist/client/` assets and `dist/server/` Worker; no Pages output-directory field |
-| Package manager | pnpm 11.19.0, pinned in `package.json`; install from `pnpm-lock.yaml` with `pnpm install --frozen-lockfile` |
-| Build variables | `NODE_VERSION=24.19.0`, `PNPM_VERSION=11.19.0` (clean-install/build verification versions) |
-
-The package requires Node.js `>=22.13.0`. Cloudflare documents version overrides in its [build image settings](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/).
-
-This repository is one application, not a monorepo. `pnpm-workspace.yaml` explicitly includes only the root package (`.`) and retains the dependency build-script permissions for esbuild, workerd, and sharp. Keep that file: deleting it would also discard those permissions. The explicit package list avoids the `packages field missing or empty` validation used by older pnpm bootstrap versions. `allowBuilds` requires pnpm 10.26 or newer, so use the pinned 11.19.0 release and set `PNPM_VERSION=11.19.0` in Workers Builds rather than relying on its default installer.
-
-After `pnpm run build`, the Cloudflare Vite plugin writes `.wrangler/deploy/config.json`, which redirects plain `npx wrangler deploy` to `dist/server/wrangler.json`. Thus the dashboard's plain deploy command can deploy this architecture after a successful build. The explicit command in the table makes the generated target clear and also preserves dashboard text variables with `--keep-vars`.
-
-Configure runtime variables under the Worker's **Settings > Variables and Secrets**, separately from build variables:
-
-- `APP_ORIGIN`: the final HTTPS origin, without a path or trailing slash.
-- `LOCAL_PREVIEW`: the string `false`.
-- `SUPABASE_URL`: your production Supabase project URL.
-- `SUPABASE_SERVICE_ROLE_KEY`: your production service-role credential; use the encrypted Secret type.
-
-`wrangler.jsonc` sets `keep_vars: true`, so dashboard text variables survive deployments even if Workers Builds uses plain `wrangler deploy`. The explicit `--keep-vars` command also works. The production origin and `LOCAL_PREVIEW=false` are versioned in the configuration. Secrets are preserved by Wrangler. The current application does not require `SESSION_SECRET` or passcode hashes. Apply all migrations in `supabase/migrations/` to the production Supabase database before using the letter APIs. Local letters and uploaded stickers stored in the local database are private data and are not transferred through Git.
-
-### Diagnosing a production connection error
-
-The browser requests `/api/indi/letters` or `/api/auggie/letters` on the same HTTPS origin. The Worker reads its runtime settings and calls `${SUPABASE_URL}/rest/v1/rpc/mailbox_snapshot` with server-only credentials. The response contains `latest`, `received`, `last_incoming_at`, and `established_at`. Null letters are a successful empty mailbox. Local development instead uses a loopback PostgreSQL bridge; deploying the source does not deploy that bridge or copy `.env.local` into Worker settings.
-
-The world can render without database settings, but the letter APIs return 503 if those settings are missing, the database is inaccessible, or its migrations are absent. Check the Worker's **Settings > Variables and Secrets**, not only **Settings > Builds > Variables and secrets**:
-
-- Production needs `SUPABASE_URL` and the encrypted secret `SUPABASE_SERVICE_ROLE_KEY` from an existing production Supabase project.
-- `APP_ORIGIN=https://auggieisromantic.uk` and `LOCAL_PREVIEW=false` are supplied by the committed Wrangler configuration.
-- Preview environments that should support mail need both database settings too. Use a separate test database and the preview's exact `APP_ORIGIN`; do not enable the loopback-only `LOCAL_PREVIEW` in a deployed Worker.
-- Do not use the generated local database key or localhost URL in Cloudflare.
-
-Worker observability is enabled. In Worker logs, find `mailbox_connection_failed`:
-
-| Diagnostic | Meaning / next step |
-| --- | --- |
-| `server_not_configured` | Add the listed variable names to runtime settings; values are never logged. |
-| `invalid_url`, `https_required`, `invalid_local_configuration`, `origin_must_not_include_path` | Correct the listed settings. |
-| `database_unavailable`, status 401/403 | Check the Supabase server credential and permissions. |
-| `database_unavailable`, status 404, `PGRST202` | Apply all migrations to the selected Supabase project; its RPC function is missing from the schema cache. |
-| `database_timeout` / `database_request_failed` | Check database reachability and availability. |
-
-Other upstream HTTP status and SQL/PostgREST codes are retained, but response bodies, letter text, credentials, and raw exceptions are not logged. The browser keeps the friendly error banner. One transient failure gets an automatic retry before displaying the banner; repeated failures back off from 4 seconds to at most 60 seconds. “try again” retries immediately and displays progress. Successful retries clear the error and restore normal polling. Hidden/offline tabs skip automatic polling.
-
-After building, `pnpm verify:worker-config` exercises the compiled Cloudflare runtime with isolated HTTPS RPC fixtures and no `.env.local`: missing database secrets must return 503; runtime credentials and a valid empty mailbox must return 200 for both owners. `pnpm verify:worker` and `pnpm test:e2e` separately exercise actual PostgreSQL through the QA bridge.
-
-## Verification and development fixtures
-
-`pnpm test` runs 94 unit and PostgreSQL integration tests, including the three mailbox states, continuous delivery and delayed confirmation, globe lighting, required postage, resizable stamps, original sticker assets, timezone/DST transitions, day/night continuity, twilight text contrast, animal behavior, rotated object bounds, partial erasing, typed/drawn signatures, gesture history, document validation, artwork persistence and retry safety. The database tests use independent temporary stores, including a close/reopen persistence check. In restricted Windows environments where `tsx` cannot read the user profile, `pnpm test:local` runs the same suite with the included Node TypeScript loader.
-
-Run the QA database with `node scripts/local-db.mjs --qa`, then the built QA Worker with `node scripts/verify-worker.mjs --qa --serve`, in separate terminals. This uses `.local/qa-postgres`, database port 55433 and app port 3101. The personal preview uses its original store on ports 55432/3100.
-
-`pnpm test:e2e` exercises actual public HTTP endpoints through the entire two-person exchange on the isolated QA Worker. It compares complete artwork documents in both directions, including styled text, line breaks, transformed stamps, built-in/custom PNG stickers and remaining ink paths. It also checks cookie-free access, CSRF, validation, retry safety and repeated reads. It refuses the personal preview port and non-local destinations. These test records never enter the personal mailbox.
-
-Browser validation was also performed through the complete visual exchange at phone, tablet, and desktop sizes; see [VALIDATION.md](VALIDATION.md).
-
-To inspect aging, stop both preview processes before changing local timestamps:
-
-```sh
-pnpm aging 0
-pnpm aging 7
-pnpm aging 14
-pnpm aging 30
-```
-
-Run one of those at a time, then restart the preview. Unread incoming mail always looks freshly restored; open it to inspect older aging fixtures. These commands alter only development timestamps and preserve letter contents. A new incoming letter restores the fresh appearance automatically.
-
-For a private backup, stop the database and run `pnpm export:local`. It writes `.local/letters-export.json`. Local storage stays local when you configure Supabase; importing a backup into a hosted database is a separate explicit step.
+`pnpm aging 0`, `pnpm aging 7`, `pnpm aging 14` and `pnpm aging 30` change only local D1 timestamps for visual review; stop the preview first. Contents remain intact.
 
 ## Source and assets
 
-- `app/`: two mailbox pages and private API handlers.
-- `components/world/`, `components/mailbox/`, `components/letter/`: original SVG art and interactions.
-- `components/animals/`, `lib/animals/`, `public/animals/`: sprite rendering, shared event director, character configuration and PNG sheets.
-- `hooks/use-mailbox.ts`: client request, polling, and animation orchestration.
-- `lib/server/`: environment checks, bounded requests, and HTTP database access.
-- `lib/mailbox-state.ts`: pure conversation and aging logic.
-- `scripts/`, `tests/`, `supabase/`: reproducible setup, checks, and migration.
+- `app/`: mailbox pages and server API handlers.
+- `components/`, `hooks/`, `public/`: existing visual world, letter editor, interactions, polling, fonts and sprites.
+- `lib/server/`: D1 access, runtime checks and bounded endpoints.
+- `migrations/`: D1 schema; add new migrations for future upgrades rather than rewriting an applied file.
+- `scripts/`, `tests/`: local setup, backup/import, verification and isolated fixtures.
 
-The locally served Pixelify Sans files include their license in `public/fonts/LICENSE.txt`. World/mailbox art uses the user-supplied day/night references with SVG cropping and animated parts; animal PNGs are generated from integer pixel models. Original reference images and the two small-use clean plates live in `public/world/reference`. Unused starter primitives remain vendored and are excluded from custom-source linting; the application itself uses the dialog primitive and custom semantic controls.
-
-Create a source-only archive on Windows with `powershell -File scripts/package-source.ps1`. Dependencies, build output, credentials, local databases, and local test records are excluded.
-
+Artwork specifications remain in [public/world/ARTWORK.md](public/world/ARTWORK.md), [components/animals/SPRITES.md](components/animals/SPRITES.md), and [docs/mailbox-physics.md](docs/mailbox-physics.md). Local fonts retain their license files. Create a source-only archive with `powershell -File scripts/package-source.ps1`; databases, credentials and build output are excluded.

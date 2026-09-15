@@ -256,6 +256,70 @@ void test('HTTP end-to-end: open access without cookies, both directions, read s
     (await call('indi', 'letters', 'GET', undefined, '')).status,
     200,
   );
+  const sentList = await call('indi', 'letters?box=sent');
+  assert.equal(sentList.status, 200);
+  assert.equal(((await sentList.json()) as Letter[])[0].id, sent.id);
+  assert.equal((await call('auggie', 'letters?box=inbox')).status, 200);
+  const reply = (await replyResponse.json()) as Letter;
+  assert.equal(
+    (
+      (await (
+        await call('auggie', 'letters/' + reply.id, 'POST')
+      ).json()) as Letter
+    ).read_at,
+    null,
+  );
+  assert.ok(
+    (
+      (await (
+        await call('indi', 'letters/' + reply.id, 'POST')
+      ).json()) as Letter
+    ).read_at,
+  );
+  assert.equal(
+    (await call('indi', 'letters/' + reply.id, 'DELETE')).status,
+    200,
+  );
+  assert.equal((await call('indi', 'letters/' + reply.id, 'POST')).status, 404);
+  assert.equal(
+    (await call('auggie', 'letters/' + reply.id, 'POST')).status,
+    200,
+  );
+  assert.equal(
+    (await call('auggie', 'letters/' + reply.id, 'DELETE')).status,
+    200,
+  );
+  assert.equal(
+    (await call('auggie', 'letters/' + reply.id, 'POST')).status,
+    404,
+  );
+  assert.equal((await call('indi', 'letters?box=unknown')).status, 400);
+  assert.equal((await call('indi', 'letters?box=inbox&offset=-1')).status, 400);
+  for (const resource of [
+    'letters',
+    'letters?box=inbox',
+    'letters?box=sent',
+    'letters/' + reply.id,
+  ]) {
+    assert.equal(
+      (await fetch(origin + '/api/stranger/' + resource)).status,
+      resource.includes(reply.id) ? 405 : 404,
+    );
+  }
+  assert.equal(
+    (
+      await fetch(origin + '/api/stranger/letters/' + reply.id, {
+        method: 'POST',
+        headers: { Origin: origin },
+      })
+    ).status,
+    404,
+  );
+  assert.equal(
+    (await fetch(origin + '/api/indi/letters/' + sent.id, { method: 'DELETE' }))
+      .status,
+    403,
+  );
   console.log(
     'Confirmed /indi → send → /auggie → receive → read → reply → /indi → receive without passwords or cookies.',
   );

@@ -5,8 +5,8 @@ if (-not $Destination) {
   $Destination = Join-Path (Split-Path $mailboxRoot -Parent) 'our-mailbox-source.zip'
 }
 $mailboxArchivePath = [IO.Path]::GetFullPath($Destination)
-$mailboxDirectories = @('app','components','hooks','lib','public','scripts','tests','supabase','.openai')
-$mailboxFiles = @('README.md','VALIDATION.md','package.json','pnpm-lock.yaml','pnpm-workspace.yaml','.npmrc','.gitignore','.env.example','.oxfmtrc.json','.oxlintrc.json','components.json','next.config.ts','next-env.d.ts','postcss.config.mjs','tsconfig.json','vite.config.ts','wrangler.jsonc')
+$mailboxDirectories = @('app','components','hooks','lib','public','scripts','tests','migrations','.openai')
+$mailboxFiles = @('README.md','VALIDATION.md','package.json','pnpm-lock.yaml','pnpm-workspace.yaml','.npmrc','.gitignore','.env.example','.oxfmtrc.json','.oxlintrc.json','components.json','next.config.ts','next-env.d.ts','cloudflare-env.d.ts','AGENTS.md','postcss.config.mjs','tsconfig.json','vite.config.ts','wrangler.jsonc')
 $mailboxSources = @()
 foreach ($mailboxDirectory in $mailboxDirectories) {
   $mailboxSources += Get-ChildItem -LiteralPath (Join-Path $mailboxRoot $mailboxDirectory) -File -Recurse -Force

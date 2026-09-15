@@ -1,70 +1,50 @@
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { readFile, readdir } from 'node:fs/promises';
-import { parseEnv } from 'node:util';
 import assert from 'node:assert/strict';
-const require = createRequire(import.meta.url);
-const miniflarePath = require.resolve('miniflare', {
-  paths: [dirname(require.resolve('wrangler/package.json'))],
-});
-const { Miniflare } = await import(pathToFileURL(miniflarePath).href);
-const config = JSON.parse(await readFile('dist/server/wrangler.json', 'utf8'));
-const bindings = parseEnv(await readFile('.env.local', 'utf8'));
+import { resolve } from 'node:path';
+import { workerRuntime } from './worker-test-runtime.mjs';
+import { migrate } from './d1-test.mjs';
 const qa = process.argv.includes('--qa');
-const port = qa ? 3101 : 3100;
-bindings.APP_ORIGIN = `http://localhost:${port}`;
-if (qa) bindings.SUPABASE_URL = 'http://127.0.0.1:55433';
-const moduleFiles = (await readdir('dist/server', { recursive: true })).filter(
-  (path) => path.endsWith('.js') && path !== 'index.js',
-);
-const modules = [
-  { type: 'ESModule', path: resolve('dist/server/index.js') },
-  ...moduleFiles.map((path) => ({
-    type: 'ESModule',
-    path: resolve('dist/server', path),
-  })),
-];
-const mf = new Miniflare({
-  host: '127.0.0.1',
-  port,
-  modules,
-  modulesRoot: resolve('dist/server'),
-  compatibilityDate: config.compatibility_date,
-  compatibilityFlags: config.compatibility_flags,
-  bindings,
-  assets: {
-    directory: resolve('dist/client'),
-    binding: 'ASSETS',
-    routerConfig: { has_user_worker: true },
-  },
+const serving = process.argv.includes('--serve');
+const requestedPort = process.argv
+  .find((arg) => arg.startsWith('--port='))
+  ?.split('=')[1];
+const port = requestedPort ? Number(requestedPort) : qa ? 3101 : 3100;
+if (!Number.isInteger(port) || port < 1024 || port > 65535)
+  throw new Error('Invalid local port.');
+const runtime = await workerRuntime({
+  port: serving ? port : undefined,
+  persist: serving && !qa ? resolve('.wrangler/state/v3/d1') : false,
 });
 try {
-  await mf.ready;
-  const page = await mf.dispatchFetch(bindings.APP_ORIGIN + '/indi');
-  assert.equal(page.status, 200);
-  assert.ok((await page.text()).includes('Our Mailbox'));
-  const asset = await mf.dispatchFetch(
-    bindings.APP_ORIGIN + '/fonts/pixelify-sans-latin-400-normal.woff2',
-  );
-  assert.equal(asset.status, 200);
-  const letter = await mf.dispatchFetch(
-    bindings.APP_ORIGIN + '/api/indi/letters',
-  );
-  assert.equal(letter.status, 200);
-  assert.ok((await letter.json()).established_at);
-  console.log(
-    'Built Worker passed: page rendering, local font assets, password-free mailbox access and PostgreSQL access.',
-  );
-  if (process.argv.includes('--serve')) {
-    console.log(
-      `Built Worker ${qa ? 'isolated QA' : 'preview'} ready at http://localhost:${port}`,
+  if (!serving || qa)
+    await migrate(await runtime.mf.getD1Database('MAILBOX_DB'));
+  for (const owner of ['indi', 'auggie']) {
+    const page = await runtime.mf.dispatchFetch(runtime.origin + '/' + owner);
+    assert.equal(page.status, 200);
+    assert.ok((await page.text()).includes('Our Mailbox'));
+    const letters = await runtime.mf.dispatchFetch(
+      runtime.origin + '/api/' + owner + '/letters',
     );
+    assert.equal(letters.status, 200);
+    assert.ok((await letters.json()).established_at);
+  }
+  assert.equal(
+    (
+      await runtime.mf.dispatchFetch(
+        runtime.origin + '/fonts/pixelify-sans-latin-400-normal.woff2',
+      )
+    ).status,
+    200,
+  );
+  console.log(
+    'Built Worker passed: both pages, fonts, public mailbox APIs and actual local D1.',
+  );
+  if (serving) {
+    console.log('Worker ready at ' + runtime.origin);
     await new Promise((resolve) => {
       process.once('SIGINT', resolve);
       process.once('SIGTERM', resolve);
     });
   }
 } finally {
-  await mf.dispose();
+  await runtime.mf.dispose();
 }

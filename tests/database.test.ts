@@ -1,38 +1,47 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, readdir, mkdir, mkdtemp } from 'node:fs/promises';
+import { mkdir, mkdtemp } from 'node:fs/promises';
 import { newLetterArt } from '../lib/letter-art';
 import { newLetterDocument, makeStamp } from '../lib/letter-document';
 import { paginateDocument } from '../lib/letter-pages';
-import { PGlite } from '@electric-sql/pglite';
-import type { Letter, MailboxSnapshot } from '../lib/mailbox-state';
-let db: PGlite;
+import { testDatabase, migrate } from '../scripts/d1-test.mjs';
+import { MailboxDatabase } from '../lib/server/database';
+import type { Letter, MailboxSnapshot, Owner } from '../lib/mailbox-state';
+import { importLetters } from '../scripts/import-letters.mjs';
+let db: D1Database;
+let runtime: Awaited<ReturnType<typeof testDatabase>>;
+let mailbox: MailboxDatabase;
 let directory: string;
 before(async () => {
   await mkdir('.local', { recursive: true });
-  directory = await mkdtemp('.local/test-postgres-');
-  db = new PGlite(directory);
-  await db.exec(
-    'create role anon; create role authenticated; create role service_role;',
-  );
-  for (const migration of (await readdir('supabase/migrations'))
-    .filter((n) => n.endsWith('.sql'))
-    .sort())
-    await db.exec(await readFile('supabase/migrations/' + migration, 'utf8'));
+  directory = await mkdtemp('.local/test-d1-');
+  runtime = await testDatabase(directory);
+  db = runtime.db as unknown as D1Database;
+  mailbox = new MailboxDatabase(db);
+  await migrate(db);
 });
 after(async () => {
-  await db.close();
+  await runtime.mf.dispose();
 });
+async function reopen() {
+  await runtime.mf.dispose();
+  runtime = await testDatabase(directory);
+  db = runtime.db as unknown as D1Database;
+  mailbox = new MailboxDatabase(db);
+}
 async function rpc<T>(fn: string, args: unknown[]): Promise<T> {
-  const result = await db.query<{ result: T }>(
-    'select public.' +
-      fn +
-      '(' +
-      args.map((_, i) => '$' + (i + 1)).join(',') +
-      ') as result',
-    args,
-  );
-  return result.rows[0].result;
+  const owner = args[0] as Owner;
+  if (fn === 'mailbox_snapshot') return (await mailbox.snapshot(owner)) as T;
+  if (fn === 'read_letter')
+    return (await mailbox.open(owner, args[1] as string, true)) as T;
+  if (fn === 'send_letter')
+    return (await mailbox.send(owner, {
+      body: args[1] as string,
+      reply_to: args[2] as string | null,
+      client_id: args[3] as string,
+      artwork: typeof args[4] === 'string' ? JSON.parse(args[4]) : null,
+    })) as T;
+  throw new Error('Unknown test operation');
 }
 void test('permanent letters: first send, read, reply, retry, reopen database', async () => {
   const firstId = crypto.randomUUID();
@@ -99,18 +108,13 @@ void test('permanent letters: first send, read, reply, retry, reopen database', 
   ]);
   assert.equal(reply.recipient, 'indi');
   assert.equal(reply.reply_to, first.id);
-  await db.close();
-  db = new PGlite(directory);
+  await reopen();
   assert.equal(
     (await rpc<MailboxSnapshot>('mailbox_snapshot', ['indi'])).latest?.body,
     'A reply from Auggie.',
   );
   assert.equal(
-    (
-      await db.query<{ count: number }>(
-        'select count(*)::integer as count from public.letters',
-      )
-    ).rows[0].count,
+    await db.prepare('SELECT count(*) AS n FROM letters').first('n'),
     2,
   );
 });
@@ -125,10 +129,12 @@ void test('database constraints reject invalid senders, blank and oversized bodi
     /invalid_owner/,
   );
   await assert.rejects(() =>
-    db.query(
-      "insert into public.letters(sender,recipient,body,client_id) values('indi','indi','hello',$1)",
-      [crypto.randomUUID()],
-    ),
+    db
+      .prepare(
+        "INSERT INTO letters(id,sender_id,recipient_id,body,client_id) VALUES(?, 'indi', 'indi', 'hello', ?)",
+      )
+      .bind(crypto.randomUUID(), crypto.randomUUID())
+      .run(),
   );
 });
 void test('stamp and actual ink persist across reads, replies, reopen, and idempotent retries', async () => {
@@ -170,8 +176,7 @@ void test('stamp and actual ink persist across reads, replies, reopen, and idemp
   const read = await rpc<Letter>('read_letter', ['auggie', sent.id]);
   assert.deepEqual(read.artwork, art);
   await rpc('send_letter', ['auggie', 'Reply.', sent.id, crypto.randomUUID()]);
-  await db.close();
-  db = new PGlite(directory);
+  await reopen();
   const reopened = await rpc<MailboxSnapshot>('mailbox_snapshot', ['auggie']);
   assert.equal(reopened.received?.id, sent.id);
   assert.deepEqual(reopened.received?.artwork, art);
@@ -227,8 +232,7 @@ void test('version 2 styled text, multiple stamps and uploaded stickers survive 
     /idempotency_conflict/,
   );
   await rpc('read_letter', ['auggie', sent.id]);
-  await db.close();
-  db = new PGlite(directory);
+  await reopen();
   assert.deepEqual(
     (await rpc<MailboxSnapshot>('mailbox_snapshot', ['auggie'])).received
       ?.artwork,
@@ -267,8 +271,7 @@ void test('version 3 text ranges and page-local ink and rotated objects survive 
   const sent = await rpc<Letter>('send_letter', args);
   assert.deepEqual(sent.artwork, doc);
   await rpc('read_letter', ['indi', sent.id]);
-  await db.close();
-  db = new PGlite(directory);
+  await reopen();
   assert.deepEqual(
     (await rpc<MailboxSnapshot>('mailbox_snapshot', ['indi'])).received
       ?.artwork,
@@ -276,52 +279,192 @@ void test('version 3 text ranges and page-local ink and rotated objects survive 
   );
   assert.equal((await rpc<Letter>('send_letter', args)).id, sent.id);
 });
-void test('browser database roles cannot read tables or execute privileged functions', async () => {
-  for (const role of ['anon', 'authenticated']) {
-    await db.exec('set role ' + role);
-    await assert.rejects(
-      () => db.query('select * from public.letters'),
-      /permission denied/,
-    );
-    await assert.rejects(
-      () => rpc('mailbox_snapshot', ['indi']),
-      /permission denied/,
-    );
-    await db.exec('reset role');
-  }
+
+async function isolated(t: { after: (fn: () => Promise<void>) => void }) {
+  const runtime = await testDatabase();
+  t.after(() => runtime.mf.dispose());
+  await migrate(runtime.db);
+  return {
+    db: runtime.db as unknown as D1Database,
+    box: new MailboxDatabase(runtime.db as unknown as D1Database),
+  };
+}
+const payload = (reply_to: string | null = null) => ({
+  body: "A letter with 'quotes'; DROP TABLE letters; --",
+  reply_to,
+  client_id: crypto.randomUUID(),
 });
-void test('rate limits persist and enforce attempts atomically', async () => {
-  assert.equal(await rpc('take_auth_attempt', ['test-ip', 2, 900]), true);
-  assert.equal(await rpc('take_auth_attempt', ['test-ip', 2, 900]), true);
-  assert.equal(await rpc('take_auth_attempt', ['test-ip', 2, 900]), false);
+void test('inbox and sent are newest first, paginated, and do not mark letters read', async (t) => {
+  const { box } = await isolated(t);
+  const first = await box.send('indi', payload());
+  assert.deepEqual(
+    (await box.list('auggie', 'inbox')).map((l) => l.id),
+    [first.id],
+  );
+  assert.deepEqual(await box.list('indi', 'inbox'), []);
+  assert.deepEqual(await box.list('auggie', 'sent'), []);
+  assert.equal((await box.list('indi', 'sent'))[0].read_at, null);
+  assert.equal((await box.open('indi', first.id)).read_at, null);
+  await box.open('auggie', first.id);
+  const reply = await box.send('auggie', payload(first.id));
+  await box.open('indi', reply.id);
+  const next = await box.send('indi', payload(reply.id));
+  assert.deepEqual(
+    (await box.list('auggie', 'inbox')).map((l) => l.id),
+    [next.id, first.id],
+  );
+  assert.deepEqual(
+    (await box.list('indi', 'sent', 1)).map((l) => l.id),
+    [first.id],
+  );
 });
-void test('simultaneous first sends can produce only one letter', async () => {
-  const isolated = new PGlite();
-  await isolated.exec(
-    'create role anon;create role authenticated;create role service_role;',
+void test('recipient and sender soft deletion preserve the other copy and both-deleted mail stays stored', async (t) => {
+  const { box, db } = await isolated(t);
+  const input = payload();
+  const first = await box.send('indi', input);
+  await box.delete('indi', first.id);
+  assert.deepEqual(await box.list('indi', 'sent'), []);
+  assert.equal((await box.snapshot('indi')).latest, null);
+  assert.equal((await box.snapshot('indi')).waiting, true);
+  await assert.rejects(() => box.open('indi', first.id), /letter_not_found/);
+  await assert.rejects(() => box.send('indi', input), /letter_not_found/);
+  assert.equal((await box.open('auggie', first.id)).id, first.id);
+  await box.delete('auggie', first.id);
+  await box.delete('auggie', first.id); // repeat is harmless
+  assert.deepEqual(await box.list('auggie', 'inbox'), []);
+  assert.equal((await box.snapshot('auggie')).received, null);
+  await assert.rejects(
+    () => box.open('auggie', first.id, true),
+    /letter_not_found/,
   );
-  await isolated.exec(
-    await readFile('supabase/migrations/202609050001_mailbox.sql', 'utf8'),
+  assert.equal(
+    await db.prepare('SELECT count(*) AS n FROM letters').first('n'),
+    1,
   );
+  const next = await box.send(
+    'auggie',
+    payload((await box.snapshot('auggie')).reply_to),
+  );
+  assert.equal(next.reply_to, first.id);
+});
+void test('deleting an unread incoming letter allows replying without resurrecting it', async (t) => {
+  const { box } = await isolated(t);
+  const first = await box.send('indi', payload());
+  await box.delete('auggie', first.id);
+  assert.equal((await box.open('indi', first.id)).read_at, null);
+  const snapshot = await box.snapshot('auggie');
+  assert.equal(snapshot.latest, null);
+  assert.equal(snapshot.waiting, false);
+  assert.equal(
+    (await box.send('auggie', payload(snapshot.reply_to))).recipient,
+    'indi',
+  );
+});
+void test('invalid owners and unknown letter IDs cannot open, read, list, reply or delete', async (t) => {
+  const { box } = await isolated(t);
+  const first = await box.send('indi', payload());
+  const stranger = 'stranger' as Owner;
+  for (const action of [
+    () => box.snapshot(stranger),
+    () => box.list(stranger, 'inbox'),
+    () => box.open(stranger, first.id),
+    () => box.delete(stranger, first.id),
+    () => box.send(stranger, payload(first.id)),
+  ])
+    await assert.rejects(action, /invalid_owner/);
+  for (const action of [
+    () => box.open('indi', crypto.randomUUID()),
+    () => box.delete('indi', crypto.randomUUID()),
+  ])
+    await assert.rejects(action, /letter_not_found/);
+  // Public access is intentional; these checks validate a mailbox, not a person.
+});
+void test('simultaneous first sends and simultaneous replies each produce only one letter', async (t) => {
+  const { box, db } = await isolated(t);
   const results = await Promise.allSettled(
-    ['indi', 'auggie'].map((owner) =>
-      isolated.query("select public.send_letter($1,'first',null,$2)", [
-        owner,
-        crypto.randomUUID(),
-      ]),
-    ),
+    (['indi', 'auggie'] as const).map((owner) => box.send(owner, payload())),
+  );
+  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+  const first = (await box.snapshot('indi')).latest!;
+  await box.open(first.recipient, first.id);
+  const replies = await Promise.allSettled([
+    box.send(first.recipient, payload(first.id)),
+    box.send(first.recipient, payload(first.id)),
+  ]);
+  assert.equal(replies.filter((r) => r.status === 'fulfilled').length, 1);
+  assert.equal(
+    await db.prepare('SELECT count(*) AS n FROM letters').first('n'),
+    2,
+  );
+});
+void test('concurrent identical retries store one record and changed content conflicts', async (t) => {
+  const { box, db } = await isolated(t);
+  const input = payload();
+  const letters = await Promise.all([
+    box.send('indi', input),
+    box.send('indi', input),
+  ]);
+  assert.equal(letters[0].id, letters[1].id);
+  await assert.rejects(
+    () => box.send('indi', { ...input, body: 'Changed' }),
+    /idempotency_conflict/,
   );
   assert.equal(
-    results.filter((result) => result.status === 'fulfilled').length,
+    await db.prepare('SELECT count(*) AS n FROM letters').first('n'),
     1,
+  );
+});
+void test('backup import preserves every field and fails atomically for nonempty or invalid data', async (t) => {
+  const { db, box } = await isolated(t);
+  const at = '2026-09-01T12:34:56.789Z';
+  const id = crypto.randomUUID();
+  const art = newLetterArt();
+  const saved = {
+    id,
+    sender: 'indi',
+    recipient: 'auggie',
+    body: 'Retained',
+    created_at: at,
+    delivered_at: at,
+    read_at: null,
+    reply_to: null,
+    client_id: crypto.randomUUID(),
+    artwork: art,
+  };
+  const backup = {
+    letters: [saved],
+    world: [{ latest_id: id, established_at: at }],
+  };
+  await assert.rejects(() =>
+    importLetters(db, {
+      ...backup,
+      letters: [{ ...saved, recipient: 'invalid' }],
+    }),
   );
   assert.equal(
-    (
-      await isolated.query<{ count: number }>(
-        'select count(*)::integer as count from public.letters',
-      )
-    ).rows[0].count,
-    1,
+    await db.prepare('SELECT count(*) AS n FROM letters').first('n'),
+    0,
   );
-  await isolated.close();
+  assert.equal(await importLetters(db, backup), 1);
+  const snapshot = await box.snapshot('auggie');
+  assert.equal(snapshot.established_at, at);
+  assert.deepEqual(snapshot.latest, {
+    id,
+    sender: 'indi',
+    recipient: 'auggie',
+    body: 'Retained',
+    created_at: at,
+    delivered_at: at,
+    read_at: null,
+    reply_to: null,
+    artwork: art,
+  });
+  await assert.rejects(() => importLetters(db, backup));
+  // The turn triggers survive both successful and failed imports.
+  await assert.rejects(
+    () => box.send('indi', payload(id)),
+    /waiting_for_reply/,
+  );
+  await box.open('auggie', id);
+  assert.equal((await box.send('auggie', payload(id))).reply_to, id);
 });

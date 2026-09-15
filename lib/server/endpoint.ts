@@ -93,7 +93,22 @@ export async function endpoint(
     if (error instanceof DatabaseError) {
       if (error.code === 'letter_not_found')
         return json({ error: 'That letter is not in your mailbox.' }, 404);
-      if (error.code !== 'database_unavailable')
+      if (['invalid_body', 'invalid_artwork'].includes(error.code))
+        return json(
+          {
+            error:
+              'Please shorten your letter or remove a large uploaded sticker.',
+          },
+          400,
+        );
+      if (
+        [
+          'waiting_for_reply',
+          'open_letter_first',
+          'conversation_changed',
+          'idempotency_conflict',
+        ].includes(error.code)
+      )
         return json(
           {
             error:
@@ -107,14 +122,13 @@ export async function endpoint(
     // Diagnostics stay in Worker logs. Do not log raw exceptions, credentials,
     // request bodies or database messages, and keep the public error generic.
     console.error(
-      'mailbox_connection_failed',
+      'mailbox_database_failed',
       error instanceof ConfigurationError
         ? { code: error.code, variables: error.variables }
         : error instanceof DatabaseError
           ? {
               code: error.code,
-              status: error.status,
-              upstreamCode: error.upstreamCode,
+              operation: error.operation,
             }
           : {
               code:

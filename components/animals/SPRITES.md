@@ -43,4 +43,4 @@ Query overrides are parsed on the server only when `LOCAL_PREVIEW=true`. They do
 
 Append `&animalReaction=0`, `1`, or `2` to choose a click reaction; `&animalMotion=reduce` to preview static motion; `&animalSpeed=4` to accelerate a visit; or `&animalMail=new` to preview a raised flag and closed door without creating mail. The forced event begins after unlock and runs once. Reload to replay. Remove the query for normal randomized visits.
 
-`pnpm test:local` runs the same unit/PostgreSQL suite using the included TypeScript loader when `tsx` cannot read the Windows user profile in a restricted environment.
+`pnpm test:local` runs the same unit/D1 suite using the included TypeScript loader when `tsx` cannot read the Windows user profile in a restricted environment.

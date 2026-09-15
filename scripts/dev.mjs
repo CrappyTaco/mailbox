@@ -1,43 +1,27 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-const node = process.execPath;
-if (!existsSync('.env.local')) {
-  console.error('Run pnpm setup:local first.');
-  process.exit(1);
+// Use the verified production runtime for the normal local preview.
+// pnpm dev:vinext remains available for Vite's live editing / hot reload.
+async function run(args) {
+  const child = spawn(process.execPath, args, {
+    stdio: 'inherit',
+    windowsHide: true,
+    env: {
+      ...process.env,
+      WRANGLER_LOG_PATH: '.wrangler/logs',
+      WRANGLER_SEND_METRICS: 'false',
+    },
+  });
+  const stop = () => child.kill();
+  process.once('SIGINT', stop);
+  process.once('SIGTERM', stop);
+  const code = await new Promise((resolve, reject) => {
+    child.on('error', reject);
+    child.on('exit', (code, signal) => resolve(signal ? 1 : (code ?? 1)));
+  });
+  process.removeListener('SIGINT', stop);
+  process.removeListener('SIGTERM', stop);
+  return code;
 }
-const database = spawn(node, ['scripts/local-db.mjs'], {
-  stdio: ['inherit', 'pipe', 'inherit'],
-  windowsHide: true,
-});
-let app;
-database.stdout.on('data', (chunk) => {
-  process.stdout.write(chunk);
-  if (!app && chunk.toString().includes('PostgreSQL ready')) {
-    app = spawn(
-      node,
-      [
-        'node_modules/vinext/dist/cli.js',
-        'dev',
-        '--host',
-        '127.0.0.1',
-        '--port',
-        '3000',
-      ],
-      { stdio: 'inherit', windowsHide: true },
-    );
-    app.on('exit', (code) => {
-      database.kill();
-      if (code) process.exitCode = code;
-    });
-  }
-});
-function stop() {
-  app?.kill();
-  database.kill();
-}
-process.on('SIGINT', stop);
-process.on('SIGTERM', stop);
-database.on('exit', (code) => {
-  app?.kill();
-  if (code) process.exitCode = code;
-});
+const built = await run(['node_modules/vinext/dist/cli.js', 'build']);
+process.exitCode =
+  built || (await run(['scripts/verify-worker.mjs', '--serve', '--port=3000']));

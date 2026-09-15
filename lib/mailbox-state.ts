@@ -16,6 +16,8 @@ export interface Letter {
   artwork?: SavedLetterArt | null;
 }
 export interface MailboxSnapshot {
+  reply_to?: string | null;
+  waiting?: boolean;
   latest: Letter | null;
   received?: Letter | null;
   last_incoming_at: string | null;
@@ -70,7 +72,8 @@ export function getMailboxState(
       state: snapshot.latest.read_at ? 'opened-awaiting-reply' : 'new-mail',
       age: snapshot.latest.read_at ? age : 0,
     };
-  if (snapshot.latest?.sender === owner) return { state: 'waiting', age };
+  if (snapshot.latest?.sender === owner || snapshot.waiting)
+    return { state: 'waiting', age };
   return {
     state: (
       [

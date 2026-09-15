@@ -22,8 +22,6 @@ before(async () => {
   Object.assign(process.env, {
     LOCAL_PREVIEW: 'true',
     APP_ORIGIN: 'http://localhost:3000',
-    SUPABASE_URL: 'http://127.0.0.1:55432',
-    SUPABASE_SERVICE_ROLE_KEY: 'isolated-test',
     SESSION_SECRET: secret,
     INDI_PASSCODE_HASH: hash,
     AUGGIE_PASSCODE_HASH: hash,

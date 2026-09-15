@@ -8,7 +8,7 @@ const env = await readFile('.env.local', 'utf8').catch(() => '');
 const secrets = env
   .split(/\r?\n/)
   .filter((line) =>
-    /^(SUPABASE_SERVICE_ROLE_KEY|SESSION_SECRET|INDI_PASSCODE_HASH|AUGGIE_PASSCODE_HASH)=/.test(
+    /^(SESSION_SECRET|INDI_PASSCODE_HASH|AUGGIE_PASSCODE_HASH)=/.test(
       line,
     ),
   )
