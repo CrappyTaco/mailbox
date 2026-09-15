@@ -28,6 +28,9 @@ export async function workerRuntime({
     compatibilityFlags: config.compatibility_flags,
     bindings: {
       APP_ORIGIN: origin,
+      APP_ADDITIONAL_ORIGINS: production
+        ? (config.vars.APP_ADDITIONAL_ORIGINS ?? '')
+        : '',
       LOCAL_PREVIEW: production ? 'false' : 'true',
     },
     ...(database

@@ -1,5 +1,17 @@
 # Send Letter production failure — 2026-09-15
 
+## Follow-up: custom domain confirmed
+
+The user confirmed the failing URL is `https://auggieisromantic.uk/indi`. The first fix was incomplete: it accepted workers.dev while excluding the custom domain. Fresh production probes showed workers.dev reached validation (400 for `{}`), while the custom domain still got the screenshot's origin-check 403. The current deployed version retained the first fix; this was not a rollback or stale browser state.
+
+The corrected configuration keeps the custom domain as `APP_ORIGIN` and explicitly adds workers.dev through `APP_ADDITIONAL_ORIGINS`. The server validates all entries and matches the Origin header exactly against this list. Missing/null origins, unrelated sites, suffix lookalikes, and forged forwarded-host headers stay rejected. No wildcards or automatic trust of the request host are used.
+
+The browser regression now runs the full signed/stamped send, D1 write, both worlds' state transitions, and reload checks separately on **both** domains. It reproduced the custom-domain 403 before the follow-up fix. All fixtures remain isolated from production.
+
+Follow-up validation passed: 100 unit/integration tests, both domain browser tests, HTTP end-to-end, TypeScript, lint, production build, and compiled Worker/config checks. Production D1 still contained 30 letters with the original current-letter pointer before deployment.
+
+The sections below record the initial workers.dev investigation and its original verification scope.
+
 ## Root cause and evidence
 
 The public site is `https://mailbox.aselke2002.workers.dev`, but the deployed origin guard accepts `https://auggieisromantic.uk`. `wrangler.jsonc` supplied that old value. The guard itself was unchanged by the Supabase-to-D1 migration.

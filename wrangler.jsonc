@@ -19,7 +19,8 @@
 	
 	],
 	"vars": {
-		"APP_ORIGIN": "https://mailbox.aselke2002.workers.dev",
+		"APP_ORIGIN": "https://auggieisromantic.uk",
+		"APP_ADDITIONAL_ORIGINS": "https://mailbox.aselke2002.workers.dev",
 		"LOCAL_PREVIEW": "false",
 	},
 	"assets": {

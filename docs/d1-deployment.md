@@ -2,7 +2,7 @@
 
 ## Existing production: deploy the send fix
 
-Production is already running at `https://mailbox.aselke2002.workers.dev` with `MAILBOX_DB` bound to `mailbox-db` and 30 imported letters. The send fix changes only `APP_ORIGIN` to this exact browser origin. Do not repeat the import/reset instructions below on this existing database.
+Production serves both `https://auggieisromantic.uk` and `https://mailbox.aselke2002.workers.dev`, with `MAILBOX_DB` bound to `mailbox-db` and 30 imported letters. Keep `APP_ORIGIN=https://auggieisromantic.uk` and `APP_ADDITIONAL_ORIGINS=https://mailbox.aselke2002.workers.dev` so both addresses can send. Do not repeat the import/reset instructions below on this existing database.
 
 ```sh
 pnpm build:cloudflare
@@ -11,7 +11,7 @@ pnpm test:send-browser
 pnpm deploy:cloudflare
 ```
 
-The generated configuration includes the corrected `APP_ORIGIN`; no migration or database command is needed. After deployment, confirm that variable in Worker settings, then reload the browser. `keep_vars` preserves other dashboard variables; the explicitly configured `APP_ORIGIN` is supplied by this deployment. If switching to a custom domain later, update the origin configuration and production-origin regression together.
+The generated configuration includes both origin variables; no migration or database command is needed. After deployment, confirm both variables in Worker settings. `keep_vars` preserves other dashboard variables; explicitly configured variables are supplied by this deployment. When adding a domain, update the explicit allowlist and browser regression together.
 
 The remaining checklist records the original migration/setup procedure for a fresh environment.
 
@@ -50,7 +50,7 @@ The remaining checklist records the original migration/setup procedure for a fre
 
    Record the returned `database_id`. This creates a database, not a second Worker or Pages project.
 
-3. **Codex/editor — update `wrangler.jsonc`.** Replace only `REPLACE_WITH_MAILBOX_DB_ID` with that UUID. Keep `name: mailbox`, `binding: MAILBOX_DB`, `database_name: mailbox-db`, `preview_database_id: mailbox-local`, and `migrations_dir: migrations`. Keep the production origin `https://mailbox.aselke2002.workers.dev` and `LOCAL_PREVIEW: false`.
+3. **Codex/editor — update `wrangler.jsonc`.** Replace only `REPLACE_WITH_MAILBOX_DB_ID` with that UUID. Keep `name: mailbox`, `binding: MAILBOX_DB`, `database_name: mailbox-db`, `preview_database_id: mailbox-local`, and `migrations_dir: migrations`. Keep `APP_ORIGIN=https://auggieisromantic.uk`, `APP_ADDITIONAL_ORIGINS=https://mailbox.aselke2002.workers.dev`, and `LOCAL_PREVIEW: false`.
 
 4. **Codex/terminal — choose the initial production data.** The prepared backup contains the **30 local letters**, not an export of any additional letters that might exist only in the previous hosted database. Preserve/export any such production-only records before switching the live Worker. Do not restore a full SQL snapshot into a nonempty D1 database.
 
@@ -87,7 +87,7 @@ The remaining checklist records the original migration/setup procedure for a fre
 
    Port 3101 must be free for the isolated end-to-end test. `deploy:cloudflare` uses `dist/server/wrangler.json`; do not deploy the unbuilt source entry. No Git commit or push was performed by this migration. If you also deploy through Workers Builds, commit and push the reviewed changes so its next build uses the same code and database ID.
 
-6. **Cloudflare dashboard — inspect the existing Worker.** Go to **Workers & Pages → mailbox → Bindings** and confirm the D1 binding named `MAILBOX_DB` points to `mailbox-db`. Under **Settings → Variables and Secrets**, confirm `APP_ORIGIN=https://mailbox.aselke2002.workers.dev` and `LOCAL_PREVIEW=false`. Remove the retired external-database URL and service-role secrets; D1 needs neither. The deploy command creates the binding from configuration, so a second manual binding is unnecessary.
+6. **Cloudflare dashboard — inspect the existing Worker.** Go to **Workers & Pages → mailbox → Bindings** and confirm the D1 binding named `MAILBOX_DB` points to `mailbox-db`. Under **Settings → Variables and Secrets**, confirm `APP_ORIGIN=https://auggieisromantic.uk`, `APP_ADDITIONAL_ORIGINS=https://mailbox.aselke2002.workers.dev`, and `LOCAL_PREVIEW=false`. Remove the retired external-database URL and service-role secrets; D1 needs neither. The deploy command creates the binding from configuration, so a second manual binding is unnecessary.
 
 7. **Browser — verify production.** Open [Indi](https://mailbox.aselke2002.workers.dev/indi) and [Auggie](https://mailbox.aselke2002.workers.dev/auggie). Open the current letter, reply with signed/stamped stationery, and verify delivery and read state in the other world. For failures, open **Cloudflare → Workers & Pages → mailbox → Observability → Logs** and look for `mailbox_database_failed`; the safe diagnostic distinguishes missing binding, missing migrations and D1 failure.
 

@@ -70,7 +70,8 @@ export async function parseBody<T>(
 }
 export function protectOrigin(request: Request) {
   const env = getEnvironment();
-  if (request.headers.get('origin') !== env.APP_ORIGIN)
+  // Exact configured origins only; never trust Host/Forwarded headers or suffixes.
+  if (!env.APP_ORIGINS.includes(request.headers.get('origin') ?? ''))
     throw new HttpError(
       403,
       'This request came from a different world. Please refresh.',

@@ -2,14 +2,19 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, test } from 'node:test';
 import { getEnvironment, ConfigurationError } from '../lib/server/env';
 import { MailboxDatabase, DatabaseError } from '../lib/server/database';
-import { endpoint, json } from '../lib/server/endpoint';
-const variables = ['APP_ORIGIN', 'LOCAL_PREVIEW'] as const;
+import { endpoint, json, protectOrigin } from '../lib/server/endpoint';
+const variables = [
+  'APP_ORIGIN',
+  'APP_ADDITIONAL_ORIGINS',
+  'LOCAL_PREVIEW',
+] as const;
 const original = Object.fromEntries(
   variables.map((name) => [name, process.env[name]]),
 );
 beforeEach(() =>
   Object.assign(process.env, {
     APP_ORIGIN: 'https://mailbox.example',
+    APP_ADDITIONAL_ORIGINS: '',
     LOCAL_PREVIEW: 'false',
   }),
 );
@@ -28,6 +33,7 @@ const handle = (action: () => Promise<unknown>) =>
 void test('only the browser origin is required in text settings', () => {
   assert.deepEqual(getEnvironment(), {
     APP_ORIGIN: 'https://mailbox.example',
+    APP_ORIGINS: ['https://mailbox.example'],
     LOCAL_PREVIEW: false,
   });
   delete process.env.APP_ORIGIN;
@@ -51,6 +57,60 @@ void test('invalid production/local origins have safe diagnostics', () => {
   assert.throws(getEnvironment, { code: 'invalid_local_configuration' });
   process.env.APP_ORIGIN = 'http://localhost:3000';
   assert.equal(getEnvironment().LOCAL_PREVIEW, true);
+});
+void test('both configured production domains can mutate, with exact matching and no header bypass', () => {
+  process.env.APP_ORIGIN = 'https://auggieisromantic.uk';
+  process.env.APP_ADDITIONAL_ORIGINS = 'https://mailbox.aselke2002.workers.dev';
+  for (const origin of getEnvironment().APP_ORIGINS) {
+    assert.doesNotThrow(() =>
+      protectOrigin(
+        new Request(origin + '/api/indi/letters', {
+          method: 'POST',
+          headers: { origin },
+        }),
+      ),
+    );
+  }
+  for (const origin of [
+    undefined,
+    'null',
+    'https://elsewhere.example',
+    'https://auggieisromantic.uk.evil.example',
+    'http://auggieisromantic.uk',
+    'https://auggieisromantic.uk/',
+    'https://www.auggieisromantic.uk',
+  ]) {
+    assert.throws(
+      () =>
+        protectOrigin(
+          new Request('https://auggieisromantic.uk/api/indi/letters', {
+            method: 'POST',
+            headers: {
+              ...(origin === undefined ? {} : { origin }),
+              host: 'auggieisromantic.uk',
+              'x-forwarded-host': 'auggieisromantic.uk',
+            },
+          }),
+        ),
+      { status: 403 },
+    );
+  }
+});
+void test('additional origins use the same strict HTTPS and local validation', () => {
+  for (const value of [
+    '*',
+    'https://*.example',
+    'http://example.com',
+    'https://example.com/path',
+    'https://example.com,',
+  ]) {
+    process.env.APP_ADDITIONAL_ORIGINS = value;
+    assert.throws(getEnvironment, ConfigurationError);
+  }
+  process.env.LOCAL_PREVIEW = 'true';
+  process.env.APP_ORIGIN = 'http://localhost:3000';
+  process.env.APP_ADDITIONAL_ORIGINS = 'https://auggieisromantic.uk';
+  assert.throws(getEnvironment, { code: 'invalid_local_configuration' });
 });
 void test('D1 missing schema and outages return 503 without exposing SQL or mail', async (t) => {
   const log = t.mock.method(console, 'error', () => {});

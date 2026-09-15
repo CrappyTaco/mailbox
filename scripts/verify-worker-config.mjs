@@ -8,8 +8,13 @@ try {
   assert.equal(missing.config.vars.LOCAL_PREVIEW, 'false');
   assert.equal(
     missing.config.vars.APP_ORIGIN,
+    'https://auggieisromantic.uk',
+    'The custom domain must remain an accepted browser origin.',
+  );
+  assert.equal(
+    missing.config.vars.APP_ADDITIONAL_ORIGINS,
     'https://mailbox.aselke2002.workers.dev',
-    'APP_ORIGIN must match the public browser URL, or all mutations return 403.',
+    'The workers.dev address must also remain an accepted browser origin.',
   );
   assert.equal(missing.config.d1_databases[0].binding, 'MAILBOX_DB');
   const response = await missing.mf.dispatchFetch(
