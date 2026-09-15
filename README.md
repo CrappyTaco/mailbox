@@ -110,7 +110,7 @@ The existing site has no Sent screen, inbox list, archive, or chat UI. Inbox/sen
 | Worker                     | `mailbox` (existing project)  |
 | D1 binding                 | `MAILBOX_DB`                  |
 | D1 database name           | `mailbox-db`                  |
-| Production `APP_ORIGIN`    | `https://auggieisromantic.uk` |
+| Production `APP_ORIGIN`    | `https://mailbox.aselke2002.workers.dev` |
 | Production `LOCAL_PREVIEW` | `false`                       |
 
 The database ID placeholder in `wrangler.jsonc` must be replaced before deployment. No database URL, service credential, session secret or passcode hash is required. `cloudflare-env.d.ts` types the binding as `D1Database`.
@@ -144,11 +144,16 @@ pnpm verify:build
 pnpm verify:worker-config
 pnpm verify:worker
 pnpm test:e2e
+pnpm test:send-browser
 ```
 
 The unit/integration suite runs 98 tests, including actual Miniflare D1 persistence, artwork versions 1–3, concurrency, idempotency, inbox/sent ordering, per-copy deletion and atomic backup imports. Existing art, animation, validation, session-helper and public-access checks remain. `pnpm test:local` runs the same suite with the bundled TypeScript loader for restricted Windows environments.
 
 `pnpm test:e2e` starts a disposable compiled Worker and actual D1 on port 3101, exercises the entire exchange and delete APIs, then shuts down. It never touches personal local or production data. `verify:worker-config` checks the compiled Worker with missing binding/schema and production-style D1 bindings. `verify:worker` renders both pages and checks font and mailbox endpoints using disposable D1.
+
+`pnpm test:send-browser` clicks through both directions of delivery in Playwright (Edge on Windows, Playwright Chromium elsewhere). It uses the actual public workers.dev origin independently of `APP_ORIGIN`, routing every request into the compiled Worker with disposable D1. It checks the POST payload/status, database pointer, sender/destination state, sent listing, and reload persistence. Build first; no requests or test letters reach production.
+
+`APP_ORIGIN` must exactly match the address used in the browser. GET verification alone cannot detect a mismatch: all writes will return 403 before reaching D1. See [the send failure investigation](docs/send-bug-investigation.md).
 
 ## Backups and local maintenance
 

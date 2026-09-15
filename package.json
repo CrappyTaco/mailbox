@@ -20,6 +20,7 @@
     "sprites:animals": "node scripts/build-animal-sprites.mjs",
     "sprites:stamps": "node scripts/build-stamps.mjs",
     "test:e2e": "node scripts/run-e2e.mjs",
+    "test:send-browser": "node --import ./scripts/register-tests.mjs --test tests/send.browser.e2e.ts",
     "build:cloudflare": "vinext build",
     "preview:cloudflare": "node scripts/prepare-worker-preview.mjs && wrangler dev --config dist/server/wrangler.json --port 3000",
     "deploy:cloudflare": "wrangler deploy --config dist/server/wrangler.json",

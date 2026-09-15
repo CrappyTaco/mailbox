@@ -6,6 +6,11 @@ try {
   assert.equal(missing.config.name, 'mailbox');
   assert.equal(missing.config.keep_vars, true);
   assert.equal(missing.config.vars.LOCAL_PREVIEW, 'false');
+  assert.equal(
+    missing.config.vars.APP_ORIGIN,
+    'https://mailbox.aselke2002.workers.dev',
+    'APP_ORIGIN must match the public browser URL, or all mutations return 403.',
+  );
   assert.equal(missing.config.d1_databases[0].binding, 'MAILBOX_DB');
   const response = await missing.mf.dispatchFetch(
     missing.origin + '/api/indi/letters',
