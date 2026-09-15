@@ -69,6 +69,7 @@ export function useMailbox(owner: Owner) {
     });
   const [error, setError] = useState('');
   const [connectionLost, setConnectionLost] = useState(false);
+  const [connectionRetrying, setConnectionRetrying] = useState(false);
   const [busy, setBusy] = useState(false);
   const [arrival, setArrival] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
@@ -80,6 +81,8 @@ export function useMailbox(owner: Owner) {
   const snapshotRef = useRef<MailboxSnapshot | null>(null);
   const epoch = useRef(0);
   const fetching = useRef(false);
+  const connectionFailures = useRef(0);
+  const retryAt = useRef(0);
   const alive = useRef(true);
   const replyTo = useRef<string | null>(null);
   const pending = useRef<{
@@ -108,40 +111,58 @@ export function useMailbox(owner: Owner) {
     },
     [owner],
   );
-  const refresh = useCallback(async () => {
-    if (
-      fetching.current ||
-      [
-        'saving',
-        'sealing',
-        'sending',
-        'opening',
-        'closing',
-        'stowing',
-      ].includes(phaseRef.current)
-    )
-      return;
-    fetching.current = true;
-    const version = epoch.current;
-    try {
-      const data = await request<MailboxSnapshot>(base + '/letters');
-      if (!alive.current || version !== epoch.current) return;
-      update(data);
-      setConnectionLost(false);
-      if (phaseRef.current === 'loading') changePhase('idle');
-    } catch {
-      if (!alive.current || version !== epoch.current) return;
-      setConnectionLost(true);
-    } finally {
-      fetching.current = false;
-    }
-  }, [base, changePhase, update]);
+  const refresh = useCallback(
+    async (automatic = false) => {
+      if (
+        fetching.current ||
+        (automatic && Date.now() < retryAt.current) ||
+        [
+          'saving',
+          'sealing',
+          'sending',
+          'opening',
+          'closing',
+          'stowing',
+        ].includes(phaseRef.current)
+      )
+        return;
+      fetching.current = true;
+      setConnectionRetrying(true);
+      const version = epoch.current;
+      try {
+        const data = await request<MailboxSnapshot>(base + '/letters');
+        if (!alive.current || version !== epoch.current) return;
+        update(data);
+        connectionFailures.current = 0;
+        retryAt.current = 0;
+        setConnectionLost(false);
+        if (phaseRef.current === 'loading') changePhase('idle');
+      } catch {
+        if (!alive.current || version !== epoch.current) return;
+        connectionFailures.current++;
+        // Give a brief interruption one retry before showing a failure. Keep the
+        // last valid snapshot and back off during outages; manual retries bypass it.
+        retryAt.current =
+          Date.now() +
+          Math.min(
+            60000,
+            4000 * 2 ** Math.min(connectionFailures.current - 1, 4),
+          );
+        setConnectionLost(connectionFailures.current >= 2);
+      } finally {
+        fetching.current = false;
+        if (alive.current) setConnectionRetrying(false);
+      }
+    },
+    [base, changePhase, update],
+  );
   useEffect(() => {
     alive.current = true;
     queueMicrotask(() => void refresh());
     const pendingTimers = timers.current;
     const tick = setInterval(() => {
-      if (document.visibilityState === 'visible') void refresh();
+      if (document.visibilityState === 'visible' && navigator.onLine)
+        void refresh(true);
     }, 4000);
     const resume = () => {
       if (document.visibilityState === 'visible') void refresh();
@@ -343,6 +364,7 @@ export function useMailbox(owner: Owner) {
     canRedo: editor.canRedo,
     error,
     connectionLost,
+    connectionRetrying,
     busy,
     arrival,
     deliveryConfirmed,

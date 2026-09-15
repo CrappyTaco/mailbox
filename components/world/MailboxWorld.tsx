@@ -269,7 +269,12 @@ export function MailboxWorld({
           {box.connectionLost && (
             <output className="connection-message">
               Our worlds are having trouble connecting.{' '}
-              <button onClick={() => void box.refresh()}>try again</button>
+              <button
+                disabled={box.connectionRetrying}
+                onClick={() => void box.refresh()}
+              >
+                {box.connectionRetrying ? 'trying again…' : 'try again'}
+              </button>
             </output>
           )}
           {!loading && box.error && box.phase === 'idle' && (

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { getEnvironment } from './env';
+import { ConfigurationError, getEnvironment } from './env';
 import { ownerSchema } from '../validation';
 import type { Owner } from '../mailbox-state';
 import { DatabaseError } from './database';
@@ -104,6 +104,26 @@ export async function endpoint(
           409,
         );
     }
+    // Diagnostics stay in Worker logs. Do not log raw exceptions, credentials,
+    // request bodies or database messages, and keep the public error generic.
+    console.error(
+      'mailbox_connection_failed',
+      error instanceof ConfigurationError
+        ? { code: error.code, variables: error.variables }
+        : error instanceof DatabaseError
+          ? {
+              code: error.code,
+              status: error.status,
+              upstreamCode: error.upstreamCode,
+            }
+          : {
+              code:
+                error instanceof Error &&
+                ['TimeoutError', 'AbortError'].includes(error.name)
+                  ? 'database_timeout'
+                  : 'database_request_failed',
+            },
+    );
     return json(
       {
         error:

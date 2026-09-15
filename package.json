@@ -30,7 +30,8 @@
     "aging": "tsx scripts/inspect-aging.ts",
     "export:local": "tsx scripts/export-local.ts",
     "verify:build": "node scripts/verify-build.mjs",
-    "verify:worker": "node scripts/verify-worker.mjs"
+    "verify:worker": "node scripts/verify-worker.mjs",
+    "verify:worker-config": "node scripts/verify-worker-config.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

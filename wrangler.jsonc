@@ -4,6 +4,11 @@
   "main": "vinext/server/fetch-handler",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
+  "vars": {
+    "APP_ORIGIN": "https://auggieisromantic.uk",
+    "LOCAL_PREVIEW": "false",
+  },
   "assets": { "binding": "ASSETS", "directory": "./dist/client" },
-  "observability": { "enabled": false },
+  "observability": { "enabled": true },
 }

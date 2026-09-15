@@ -175,10 +175,10 @@ This alternative is useful in restricted Windows environments where Wrangler's a
 
 ## Cloudflare Workers deployment
 
-**No deployment was performed.** When you are ready:
+The production site is [auggieisromantic.uk](https://auggieisromantic.uk), deployed from `CrappyTaco/mailbox` on `main` through Workers Builds. For a new installation:
 
 1. Apply the Supabase migration.
-2. Choose the Worker name and hostname. In `wrangler.jsonc`, set the name and add nonsecret `vars` for `APP_ORIGIN` (the final HTTPS origin) and `LOCAL_PREVIEW` (`"false"`).
+2. Choose the Worker name and hostname. `wrangler.jsonc` includes the production `APP_ORIGIN` and `LOCAL_PREVIEW="false"`; update the origin if using a different domain.
 3. Run `pnpm build:cloudflare`.
 4. Authenticate with `pnpm exec wrangler login`.
 5. Deploy the generated output with `pnpm deploy:cloudflare`.
@@ -225,11 +225,36 @@ Configure runtime variables under the Worker's **Settings > Variables and Secret
 - `SUPABASE_URL`: your production Supabase project URL.
 - `SUPABASE_SERVICE_ROLE_KEY`: your production service-role credential; use the encrypted Secret type.
 
-The deploy command uses `--keep-vars` to preserve dashboard text variables. Secrets are preserved by Wrangler. The current application does not require `SESSION_SECRET` or passcode hashes. Apply all migrations in `supabase/migrations/` to the production Supabase database before using the letter APIs. Local letters and uploaded stickers stored in the local database are private data and are not transferred through Git.
+`wrangler.jsonc` sets `keep_vars: true`, so dashboard text variables survive deployments even if Workers Builds uses plain `wrangler deploy`. The explicit `--keep-vars` command also works. The production origin and `LOCAL_PREVIEW=false` are versioned in the configuration. Secrets are preserved by Wrangler. The current application does not require `SESSION_SECRET` or passcode hashes. Apply all migrations in `supabase/migrations/` to the production Supabase database before using the letter APIs. Local letters and uploaded stickers stored in the local database are private data and are not transferred through Git.
+
+### Diagnosing a production connection error
+
+The browser requests `/api/indi/letters` or `/api/auggie/letters` on the same HTTPS origin. The Worker reads its runtime settings and calls `${SUPABASE_URL}/rest/v1/rpc/mailbox_snapshot` with server-only credentials. The response contains `latest`, `received`, `last_incoming_at`, and `established_at`. Null letters are a successful empty mailbox. Local development instead uses a loopback PostgreSQL bridge; deploying the source does not deploy that bridge or copy `.env.local` into Worker settings.
+
+The world can render without database settings, but the letter APIs return 503 if those settings are missing, the database is inaccessible, or its migrations are absent. Check the Worker's **Settings > Variables and Secrets**, not only **Settings > Builds > Variables and secrets**:
+
+- Production needs `SUPABASE_URL` and the encrypted secret `SUPABASE_SERVICE_ROLE_KEY` from an existing production Supabase project.
+- `APP_ORIGIN=https://auggieisromantic.uk` and `LOCAL_PREVIEW=false` are supplied by the committed Wrangler configuration.
+- Preview environments that should support mail need both database settings too. Use a separate test database and the preview's exact `APP_ORIGIN`; do not enable the loopback-only `LOCAL_PREVIEW` in a deployed Worker.
+- Do not use the generated local database key or localhost URL in Cloudflare.
+
+Worker observability is enabled. In Worker logs, find `mailbox_connection_failed`:
+
+| Diagnostic | Meaning / next step |
+| --- | --- |
+| `server_not_configured` | Add the listed variable names to runtime settings; values are never logged. |
+| `invalid_url`, `https_required`, `invalid_local_configuration`, `origin_must_not_include_path` | Correct the listed settings. |
+| `database_unavailable`, status 401/403 | Check the Supabase server credential and permissions. |
+| `database_unavailable`, status 404, `PGRST202` | Apply all migrations to the selected Supabase project; its RPC function is missing from the schema cache. |
+| `database_timeout` / `database_request_failed` | Check database reachability and availability. |
+
+Other upstream HTTP status and SQL/PostgREST codes are retained, but response bodies, letter text, credentials, and raw exceptions are not logged. The browser keeps the friendly error banner. One transient failure gets an automatic retry before displaying the banner; repeated failures back off from 4 seconds to at most 60 seconds. “try again” retries immediately and displays progress. Successful retries clear the error and restore normal polling. Hidden/offline tabs skip automatic polling.
+
+After building, `pnpm verify:worker-config` exercises the compiled Cloudflare runtime with isolated HTTPS RPC fixtures and no `.env.local`: missing database secrets must return 503; runtime credentials and a valid empty mailbox must return 200 for both owners. `pnpm verify:worker` and `pnpm test:e2e` separately exercise actual PostgreSQL through the QA bridge.
 
 ## Verification and development fixtures
 
-`pnpm test` runs 78 unit and PostgreSQL integration tests, including the three mailbox states, continuous delivery and delayed confirmation, globe lighting, required postage, resizable stamps, original sticker assets, timezone/DST transitions, day/night continuity, twilight text contrast, animal behavior, rotated object bounds, partial erasing, typed/drawn signatures, gesture history, document validation, artwork persistence and retry safety. The database tests use independent temporary stores, including a close/reopen persistence check. In restricted Windows environments where `tsx` cannot read the user profile, `pnpm test:local` runs the same suite with the included Node TypeScript loader.
+`pnpm test` runs 94 unit and PostgreSQL integration tests, including the three mailbox states, continuous delivery and delayed confirmation, globe lighting, required postage, resizable stamps, original sticker assets, timezone/DST transitions, day/night continuity, twilight text contrast, animal behavior, rotated object bounds, partial erasing, typed/drawn signatures, gesture history, document validation, artwork persistence and retry safety. The database tests use independent temporary stores, including a close/reopen persistence check. In restricted Windows environments where `tsx` cannot read the user profile, `pnpm test:local` runs the same suite with the included Node TypeScript loader.
 
 Run the QA database with `node scripts/local-db.mjs --qa`, then the built QA Worker with `node scripts/verify-worker.mjs --qa --serve`, in separate terminals. This uses `.local/qa-postgres`, database port 55433 and app port 3101. The personal preview uses its original store on ports 55432/3100.
 
