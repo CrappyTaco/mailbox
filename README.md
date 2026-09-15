@@ -203,16 +203,20 @@ Connect `CrappyTaco/mailbox` using [Cloudflare Workers Builds](https://developer
 
 | Setting | Value |
 | --- | --- |
-| Worker name | `our-mailbox` (matches `wrangler.jsonc`) |
+| Worker name | `mailbox` (matches `wrangler.jsonc` and the connected Cloudflare Worker) |
 | Production branch | `main` |
 | Root directory | Repository root (`/`) |
-| Build command | `pnpm run build:cloudflare` |
+| Build command | `pnpm run build` |
 | Deploy command | `pnpm exec wrangler deploy --config dist/server/wrangler.json --keep-vars` |
 | Generated output | `dist/client/` assets and `dist/server/` Worker; no Pages output-directory field |
-| Package manager | pnpm; install from `pnpm-lock.yaml` with `pnpm install --frozen-lockfile` |
+| Package manager | pnpm 11.19.0, pinned in `package.json`; install from `pnpm-lock.yaml` with `pnpm install --frozen-lockfile` |
 | Build variables | `NODE_VERSION=24.19.0`, `PNPM_VERSION=11.19.0` (clean-install/build verification versions) |
 
 The package requires Node.js `>=22.13.0`. Cloudflare documents version overrides in its [build image settings](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/).
+
+This repository is one application, not a monorepo. `pnpm-workspace.yaml` explicitly includes only the root package (`.`) and retains the dependency build-script permissions for esbuild, workerd, and sharp. Keep that file: deleting it would also discard those permissions. The explicit package list avoids the `packages field missing or empty` validation used by older pnpm bootstrap versions. `allowBuilds` requires pnpm 10.26 or newer, so use the pinned 11.19.0 release and set `PNPM_VERSION=11.19.0` in Workers Builds rather than relying on its default installer.
+
+After `pnpm run build`, the Cloudflare Vite plugin writes `.wrangler/deploy/config.json`, which redirects plain `npx wrangler deploy` to `dist/server/wrangler.json`. Thus the dashboard's plain deploy command can deploy this architecture after a successful build. The explicit command in the table makes the generated target clear and also preserves dashboard text variables with `--keep-vars`.
 
 Configure runtime variables under the Worker's **Settings > Variables and Secrets**, separately from build variables:
 
