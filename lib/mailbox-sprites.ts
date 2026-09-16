@@ -64,6 +64,16 @@ export const MAILBOX_DOOR_FACE = [
   [558, 674],
 ] as const;
 
+// The letter travels in front of the far (left) jamb and behind the near
+// (right) jamb. Extend the aperture toward the approach side, keeping its
+// near arch and sill. This same polygon partitions the raster shell and clips
+// the letter, so there is no disconnected strip across the transit plane.
+export const MAILBOX_PASSAGE_FACE = [
+  [-2048, 287],
+  ...MAILBOX_DOOR_FACE.slice(15),
+  [-2048, 674],
+] as const;
+
 // Select a completed drawing. Never blend, shear, rotate, or interpolate door
 // silhouettes in the browser. The existing reversible timeline supplies t.
 export function mailboxSpriteFrame(progress: number) {

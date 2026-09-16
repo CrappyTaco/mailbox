@@ -108,15 +108,6 @@
   outline: 2px dashed var(--world-ui);
   outline-offset: 6px;
 }
-.our-world .world-header {
-  left: 47px;
-  top: 37px;
-}
-.our-world .reference-wordmark svg {
-  width: 246px;
-  height: 33px;
-  image-rendering: pixelated;
-}
 .our-world .world-clock {
   box-sizing: border-box;
   right: max(27px, env(safe-area-inset-right));
@@ -181,14 +172,6 @@
     bottom: 0;
     transform: translateX(-50%);
   }
-  .our-world .world-header {
-    left: 22px;
-    top: max(24px, env(safe-area-inset-top));
-  }
-  .our-world .reference-wordmark svg {
-    width: 220px;
-    height: auto;
-  }
   .our-world .world-clock {
     right: max(18px, env(safe-area-inset-right));
     bottom: max(22px, env(safe-area-inset-bottom));
@@ -205,14 +188,6 @@
   }
 }
 @media (max-height: 550px) {
-  .our-world .world-header {
-    top: 16px;
-    left: 22px;
-  }
-  .our-world .reference-wordmark svg {
-    width: 210px;
-    height: auto;
-  }
   .our-world .world-clock {
     bottom: 18px;
     right: 18px;

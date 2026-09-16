@@ -9,8 +9,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DeliveryScene } from '../components/letter/DeliveryScene.tsx';
 import { Mailbox } from '../components/mailbox/Mailbox.tsx';
-import { MAILBOX_ART } from '../lib/world-style.ts';
-import { MAILBOX_SHELL, MAILBOX_DOOR_FACE } from '../lib/mailbox-sprites.ts';
+import { MAILBOX_SHELL, MAILBOX_PASSAGE_FACE } from '../lib/mailbox-sprites.ts';
 import {
   deliveryFrame,
   DEPARTURE_SECONDS,
@@ -47,7 +46,7 @@ const browser = await chromium.launch({ headless: true, channel: 'msedge' });
 const page = await browser.newPage();
 const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
-const polygon = MAILBOX_DOOR_FACE.map(([x, y]) => [
+const polygon = MAILBOX_PASSAGE_FACE.map(([x, y]) => [
   MAILBOX_SHELL.x + x * MAILBOX_SHELL.scale,
   MAILBOX_SHELL.y + y * MAILBOX_SHELL.scale,
 ]);
@@ -122,6 +121,16 @@ try {
             `.delivery-stage{--reference-night:${night}}.mailbox-paint{filter:brightness(${1 - night * 0.12})}`,
           );
           const imageNode = page.locator('.delivery-envelope image');
+          assert.deepEqual(
+            await page.locator('.delivery-world > text').allTextContents(),
+            ['Seattle', 'Bangkok'],
+          );
+          assert.equal(
+            await page
+              .locator('[data-receiving-mouth]')
+              .getAttribute('data-receiving-mouth'),
+            'left',
+          );
           assert.equal(
             await imageNode.count(),
             1,
@@ -152,16 +161,66 @@ try {
                 node.width.baseVal.value *
                 node.height.baseVal.value *
                 Math.abs(m.a * m.d - m.b * m.c),
+              upright:
+                m.a > 0 &&
+                m.d > 0 &&
+                Math.abs(m.b) < 1e-8 &&
+                Math.abs(m.c) < 1e-8,
             };
           });
-          const png = await page.screenshot(),
-            painted = await pixels(png);
+          assert.ok(
+            geometry.upright,
+            'the same envelope artwork stays upright across both handoffs and routes',
+          );
+          const png = await page.screenshot();
+          // Inspect alpha coverage independently of paper/ink colors. Dark
+          // envelope contours can match the dark cavity, and filtered PNG RGB
+          // sampling changes on repaint. A white silhouette keeps the exact
+          // source alpha, transforms, clipping and occlusion, with clear contrast.
+          await imageNode.evaluate((node) => {
+            node.style.filter = 'brightness(0) invert(1)';
+          });
+          const painted = await pixels(await page.screenshot());
           await page.locator('.delivery-envelope').evaluate((node) => {
             node.style.visibility = 'hidden';
           });
           const barePng = await page.screenshot(),
             bare = await pixels(barePng);
+          const clear = [
+            'departing',
+            'travelling',
+            'waiting',
+            'inserting',
+          ].includes(frame.phase);
+          let reference;
+          let referencePng;
+          if (clear) {
+            // Keep the identical SVG viewport ancestry (and pixel sampling),
+            // but draw the letter last without its passage clip. Reparenting an
+            // image to the world SVG changes Chromium's nearest-pixel sampling
+            // even with an equivalent screen matrix.
+            await imageNode.evaluate((node) => {
+              const envelope = node.closest('.delivery-envelope');
+              const source = envelope.parentElement.hasAttribute('clip-path')
+                ? envelope.parentElement
+                : envelope;
+              const layer = source.cloneNode(true);
+              layer.id = 'unoccluded-envelope';
+              layer.removeAttribute('clip-path');
+              (layer.matches('.delivery-envelope')
+                ? layer
+                : layer.querySelector('.delivery-envelope')
+              ).style.visibility = '';
+              source.parentElement.append(layer);
+            });
+            referencePng = await page.screenshot();
+            reference = await pixels(referencePng);
+            await page
+              .locator('#unoccluded-envelope')
+              .evaluate((node) => node.remove());
+          }
           let visible = 0;
+          let expectedVisible = 0;
           const changed = [];
           const [a, b, c, d, e, f] = geometry.inverse;
           const left = Math.max(0, Math.floor(geometry.bounds.left) - 1);
@@ -178,16 +237,20 @@ try {
               left +
               (n % width);
             const i = p * 4;
+            if (
+              reference &&
+              reference[i] > 240 &&
+              reference[i + 1] > 240 &&
+              reference[i + 2] > 240 &&
+              !reference.subarray(i, i + 4).equals(bare.subarray(i, i + 4))
+            )
+              expectedVisible++;
             if (painted.subarray(i, i + 4).equals(bare.subarray(i, i + 4)))
               continue;
-            // Chromium may resample a filtered shell by a few RGB levels on
-            // repaint. Those blue-on-blue changes are not envelope coverage.
             if (
-              Math.max(
-                ...[0, 1, 2].map((channel) =>
-                  Math.abs(painted[i + channel] - bare[i + channel]),
-                ),
-              ) <= 8
+              painted[i] <= 240 ||
+              painted[i + 1] <= 240 ||
+              painted[i + 2] <= 240
             )
               continue;
             const sx = (p % viewport.width) + 0.5,
@@ -218,10 +281,7 @@ try {
               });
             if (frame.phase === 'travelling') continue;
             const allowed = [-halfPixel, 0, halfPixel].some((dx) =>
-              [-halfPixel, 0, halfPixel].some(
-                (dy) =>
-                  x + dx < MAILBOX_ART.mouth.left || inside(x + dx, y + dy),
-              ),
+              [-halfPixel, 0, halfPixel].some((dy) => inside(x + dx, y + dy)),
             );
             if (!allowed) {
               await writeFile(`${out}/failed.png`, png);
@@ -231,14 +291,23 @@ try {
               );
             }
           }
-          const clear =
-            frame.phase === 'travelling' ||
-            frame.letterX + MAILBOX_ART.stored.width < MAILBOX_ART.mouth.left;
-          if (clear)
+          // Check the whole transit, especially the far jamb. The old verifier
+          // only checked completeness after the letter was already outside,
+          // allowing a sliced envelope at the entrance to pass unnoticed.
+          if (clear) {
+            if (visible < expectedVisible - 1) {
+              await writeFile(`${out}/incomplete.png`, png);
+              await writeFile(`${out}/unoccluded.png`, referencePng);
+              await writeFile(
+                `${out}/incomplete-geometry.json`,
+                JSON.stringify(geometry),
+              );
+            }
             assert.ok(
-              visible >= geometry.area * 0.9,
-              `${recipient} ${time}: incomplete outside envelope (${visible}/${geometry.area})`,
+              expectedVisible > 0 && visible >= expectedVisible - 1,
+              `${recipient} ${viewport.width}px ${time}: incomplete transit envelope (${visible}/${expectedVisible} rendered reference pixels)`,
             );
+          }
           if (time >= 8.4)
             assert.equal(
               visible,

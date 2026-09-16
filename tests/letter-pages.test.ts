@@ -18,7 +18,7 @@ import {
 import { letterDocumentSchema } from '../lib/letter-art-schema';
 import {
   deliveryFrame,
-  ORBIT,
+  FLIGHT_ENVELOPE,
   DEPARTURE_SECONDS,
   FLIGHT_SECONDS,
 } from '../lib/delivery';
@@ -140,22 +140,16 @@ void test('full revolutions preserve the center while edge rotations remain insi
     assert.ok(letterDocumentSchema.safeParse(doc).success);
   }
 });
-void test('delivery follows the globe at a constant radius and advances around its contour', () => {
+void test('delivery clears the globe and advances continuously toward the receiving latitude', () => {
   let previous: ReturnType<typeof deliveryFrame> | undefined;
   for (let t = DEPARTURE_SECONDS; t < FLIGHT_SECONDS; t += 0.05) {
     const p = deliveryFrame(t, null);
     assert.ok(
-      Math.abs(Math.hypot(p.x - ORBIT.x, p.y - ORBIT.y) - ORBIT.radius) < 1e-8,
+      Math.hypot(p.x - 200, p.y - 220) > 95 + FLIGHT_ENVELOPE.width / 2,
     );
     if (previous) {
-      const cross =
-        (previous.x - ORBIT.x) * (p.y - ORBIT.y) -
-        (previous.y - ORBIT.y) * (p.x - ORBIT.x);
-      assert.ok(
-        cross <= 1e-8,
-        'the orbit must keep turning in the same direction',
-      );
-      assert.ok(p.angle <= previous.angle);
+      assert.ok(p.y >= previous.y, 'the letter must keep advancing');
+      assert.equal(p.angle, 0, 'the envelope stays upright at both handoffs');
     }
     previous = p;
   }

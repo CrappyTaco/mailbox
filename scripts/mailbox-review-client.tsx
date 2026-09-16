@@ -49,8 +49,8 @@ function JourneyReview() {
               setRecipient(event.target.value as 'indi' | 'auggie')
             }
           >
-            <option value="indi">Indi</option>
-            <option value="auggie">Auggie</option>
+            <option value="indi">Bangkok</option>
+            <option value="auggie">Seattle</option>
           </select>
         </label>
         <label>

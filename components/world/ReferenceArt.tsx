@@ -71,13 +71,6 @@ export function ReferenceLighting({
     </>
   );
 }
-export function ReferenceWordmark() {
-  return (
-    <svg viewBox="47 37 246 33" aria-hidden="true">
-      <ReferenceCrop path={TARGET_MASKS.title} />
-    </svg>
-  );
-}
 // Original pixels cover the plate everywhere except scenery exposed by moving
 // parts and the replaced clock. Sky and moving objects never live in this layer.
 export function ReferenceLandscape() {

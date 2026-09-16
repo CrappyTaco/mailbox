@@ -20,31 +20,32 @@ export const FLIGHT_ENVELOPE = {
 };
 // Derived from the same sprite anchors as the main scene, at exactly half scale.
 const { globe, mouth, stored, exitX } = MAILBOX_ART;
-const { centerX, centerY } = DELIVERY_GLOBE;
+const { centerY } = DELIVERY_GLOBE;
+// Reflect the entire assembly about the equator: both openings face left and
+// both post anchors stay planted. Door, flag, shadow and aperture share this
+// transform. The envelope alone is counter-reflected to stay upright.
+export const BOTTOM_MAILBOX_TRANSFORM = `translate(0 ${2 * centerY}) scale(1 -1)`;
 export function mailboxLetterCenter(letterX: number, receiving = false) {
   const x = globe.x + (letterX + stored.width / 2) * globe.scale;
   const y = globe.y + (stored.y + stored.height / 2) * globe.scale;
-  return receiving ? { x: 2 * centerX - x, y: 2 * centerY - y } : { x, y };
+  return receiving ? { x, y: 2 * centerY - y } : { x, y };
 }
 export const DEPARTING_MOUTH = {
   ...mailboxLetterCenter(stored.x),
 };
 export const RECEIVING_MOUTH = {
-  lip: 400 - (globe.x + stored.x * globe.scale),
-  outer: 400 - (globe.x + mouth.left * globe.scale),
-  top: 440 - (globe.y + mouth.bottom * globe.scale),
-  bottom: 440 - (globe.y + mouth.top * globe.scale),
-  centerY: 440 - DEPARTING_MOUTH.y,
+  lip: globe.x + (stored.x + stored.width) * globe.scale,
+  outer: globe.x + mouth.left * globe.scale,
+  top: 2 * centerY - (globe.y + mouth.bottom * globe.scale),
+  bottom: 2 * centerY - (globe.y + mouth.top * globe.scale),
+  centerY: 2 * centerY - DEPARTING_MOUTH.y,
 };
-export const ORBIT = {
-  x: centerX,
-  y: centerY,
-  entryX: mailboxLetterCenter(exitX).x,
-  exitX: 2 * centerX - mailboxLetterCenter(exitX).x,
-  radius: Math.hypot(
-    mailboxLetterCenter(exitX).x - centerX,
-    centerY - DEPARTING_MOUTH.y,
-  ),
+export const FLIGHT_PATH = {
+  start: mailboxLetterCenter(exitX),
+  end: mailboxLetterCenter(exitX, true),
+  // Horizontal tangents at both ends join the local extraction/insertion axis.
+  // The middle of the curve clears the globe, including the envelope's width.
+  controlX: DELIVERY_GLOBE.x - FLIGHT_ENVELOPE.width - 40,
 };
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
@@ -53,9 +54,9 @@ const ease = (value: number) => {
   return t * t * (3 - 2 * t);
 };
 export function deliveryFrame(elapsed: number, confirmedAt: number | null) {
+  const angle = 0;
   let x = DEPARTING_MOUTH.x,
     y = DEPARTING_MOUTH.y,
-    angle = 0,
     phase: DeliveryPhase = 'departing',
     letterX: number = stored.x;
   if (elapsed < DEPARTURE_SECONDS) {
@@ -70,17 +71,14 @@ export function deliveryFrame(elapsed: number, confirmedAt: number | null) {
     const t =
       (elapsed - DEPARTURE_SECONDS) / (FLIGHT_SECONDS - DEPARTURE_SECONDS);
     const eased = t * t * (3 - 2 * t);
-    // Both mailboxes retain the original artwork's orientation. A half orbit
-    // connects their outward directions; no reflected shell or letter is needed.
-    const radius = ORBIT.radius,
-      start = Math.atan2(DEPARTING_MOUTH.y - centerY, ORBIT.entryX - centerX);
-    const theta = start - Math.PI * eased;
-    x = centerX + radius * Math.cos(theta);
-    y = centerY + radius * Math.sin(theta);
-    angle = -180 * eased;
+    const { start, end, controlX } = FLIGHT_PATH;
+    const u = 1 - eased;
+    x = u ** 3 * start.x + 3 * u * eased * controlX + eased ** 3 * end.x;
+    y =
+      (u ** 3 + 3 * u * u * eased) * start.y +
+      (3 * u * eased * eased + eased ** 3) * end.y;
   } else {
     letterX = exitX;
-    angle = -180;
     phase = 'waiting';
     if (confirmedAt !== null) {
       const receipt = elapsed - Math.max(FLIGHT_SECONDS, confirmedAt);

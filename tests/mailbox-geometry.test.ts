@@ -34,7 +34,7 @@ void test('local envelope and world flight meet without position, size or rotati
   );
   for (const [time, point, angle] of [
     [DEPARTURE_SECONDS, departing, 0],
-    [FLIGHT_SECONDS, arriving, -180],
+    [FLIGHT_SECONDS, arriving, 0],
   ] as const) {
     for (const delta of [-0.000001, 0, 0.000001]) {
       const frame = deliveryFrame(time + delta, null);

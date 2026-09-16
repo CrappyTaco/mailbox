@@ -57,6 +57,7 @@ export function Mailbox({
   flagVisible = true,
   letterX = MAILBOX_ART.stored.x,
   letterClassName = '',
+  letterFlipY = false,
 }: {
   mail?: boolean;
   open?: boolean;
@@ -71,6 +72,8 @@ export function Mailbox({
   /** Envelope left edge in the mailbox's own viewBox, including extraction. */
   letterX?: number;
   letterClassName?: string;
+  /** Keep the envelope upright in a mailbox planted below the globe. */
+  letterFlipY?: boolean;
 }) {
   const passage = useId();
   const doorOpen = open || (door ? door === 'open' : ajar || !mail);
@@ -98,7 +101,15 @@ export function Mailbox({
       {showLetter && (
         <g clipPath={`url(#${passage})`}>
           <g className={`mailbox-letter ${letterClassName}`}>
-            <MailboxEnvelope {...MAILBOX_ART.stored} x={letterX} />
+            <g
+              transform={
+                letterFlipY
+                  ? `translate(0 ${2 * MAILBOX_ART.stored.y + MAILBOX_ART.stored.height}) scale(1 -1)`
+                  : undefined
+              }
+            >
+              <MailboxEnvelope {...MAILBOX_ART.stored} x={letterX} />
+            </g>
           </g>
         </g>
       )}

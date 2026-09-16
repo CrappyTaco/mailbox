@@ -132,6 +132,22 @@ void test('the seated door leaves the approved front rim and sill exposed', asyn
   }
 });
 
+void test('the seated door fills the cavity crescent up to the inner curved rim', async () => {
+  const { data, info } = await raster('door-0.png');
+  for (const [x, y] of [
+    [485, 310],
+    [498, 320],
+    [510, 330],
+    [529, 355],
+  ]) {
+    assert.equal(
+      data[(y * info.width + x) * 4 + 3],
+      255,
+      `exposed cavity would create a second seam at ${x},${y}`,
+    );
+  }
+});
+
 void test('cavity and exterior are disjoint pieces of the original shell with no seams or added pixels', async () => {
   const [shell, interior, exterior] = await Promise.all([
     raster('shell.png'),
@@ -149,6 +165,21 @@ void test('cavity and exterior are disjoint pieces of the original shell with no
         layer.data.subarray(i, i + 4).equals(shell.data.subarray(i, i + 4)),
       );
     }
+  }
+});
+
+void test('far jamb is behind the letter while the near jamb stays in front', async () => {
+  const [interior, exterior] = await Promise.all([
+    raster('interior.png'),
+    raster('exterior.png'),
+  ]);
+  for (const [x, y, foreground] of [
+    [280, 500, false],
+    [570, 500, true],
+  ] as const) {
+    const alpha = (y * exterior.info.width + x) * 4 + 3;
+    assert.equal(exterior.data[alpha], foreground ? 255 : 0);
+    assert.equal(interior.data[alpha], foreground ? 0 : 255);
   }
 });
 

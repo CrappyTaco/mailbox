@@ -1,4 +1,8 @@
-import { MAILBOX_DOOR_FACE, MAILBOX_SHELL } from './mailbox-sprites';
+import {
+  MAILBOX_DOOR_FACE,
+  MAILBOX_PASSAGE_FACE,
+  MAILBOX_SHELL,
+} from './mailbox-sprites';
 
 const { x, y, scale } = MAILBOX_SHELL;
 const local = (px: number, py: number) => ({
@@ -20,10 +24,10 @@ export function mailboxFloorAt(px: number) {
     ((px - MAILBOX_HINGE.x) * MAILBOX_HINGE.rise) / MAILBOX_HINGE.width
   );
 }
-const opening =
-  MAILBOX_DOOR_FACE.map(
-    ([px, py], i) => `${i ? 'L' : 'M'}${x + px * scale} ${y + py * scale}`,
-  ).join('') + 'Z';
+const path = (points: readonly (readonly [number, number])[]) =>
+  points
+    .map(([px, py], i) => `${i ? 'L' : 'M'}${x + px * scale} ${y + py * scale}`)
+    .join('') + 'Z';
 const letterWidth = 47 / 2;
 const letterHeight = 41 / 2;
 const storedX = 13.5;
@@ -38,7 +42,8 @@ export const mailboxGeometry = {
     bottom: local(558, 674).y,
     centerY: storedY + letterHeight / 2,
   },
-  opening,
+  opening: path(MAILBOX_DOOR_FACE),
+  passage: path(MAILBOX_PASSAGE_FACE),
   stored: { x: storedX, y: storedY, width: letterWidth, height: letterHeight },
   // At this point the complete envelope is beyond the open door's tip.
   exitX: MAILBOX_SHELL.x - letterWidth,

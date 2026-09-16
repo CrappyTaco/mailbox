@@ -6,13 +6,15 @@ await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true, channel: 'msedge' });
 const errors = [];
 try {
-  for (const [owner, time] of [
-    ['indi', '2026-09-12T03:33:00Z'],
-    ['auggie', '2026-09-12T08:17:00Z'],
+  for (const [owner, time, width, height, reducedMotion] of [
+    ['indi', '2026-09-12T03:33:00Z', 1280, 900, 'no-preference'],
+    ['auggie', '2026-09-12T08:17:00Z', 1280, 900, 'no-preference'],
+    ['indi', '2026-09-12T03:33:00Z', 390, 844, 'no-preference'],
+    ['auggie', '2026-09-12T08:17:00Z', 390, 844, 'reduce'],
   ]) {
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 900 },
-      reducedMotion: 'no-preference',
+      viewport: { width, height },
+      reducedMotion,
     });
     const page = await context.newPage();
     page.on('pageerror', (e) => errors.push(e.message));
@@ -61,16 +63,28 @@ try {
     await page.goto(`http://127.0.0.1:3100/${owner}?skyTime=${time}`, {
       waitUntil: 'networkidle',
     });
+    await expect(
+      page.locator('.world-header, .reference-wordmark'),
+    ).toHaveCount(0);
+    await expect(page.getByText('Our Mailbox', { exact: true })).toHaveCount(0);
+    expect(await page.locator('.world-scene').boundingBox()).toMatchObject({
+      x: 0,
+      y: 0,
+      width,
+      height,
+    });
+    await page.screenshot({ path: `${out}/${owner}-${width}-world.png` });
     await page
       .getByRole('button', { name: 'Open your letter', exact: true })
       .click();
-    await expect(
-      page.locator('.mailbox-art.is-retrieving .mailbox-letter'),
-    ).toHaveCSS('opacity', '1');
+    if (reducedMotion === 'no-preference')
+      await expect(
+        page.locator('.mailbox-art.is-retrieving .mailbox-letter'),
+      ).toHaveCSS('opacity', '1');
     await expect(
       page.locator('.mailbox-hit .mailbox-hinged-door'),
     ).toHaveAttribute('data-door-progress', '1.000');
-    await page.screenshot({ path: `${out}/${owner}-retrieval.png` });
+    await page.screenshot({ path: `${out}/${owner}-${width}-retrieval.png` });
     const close = page.getByRole('button', {
       name: 'Put the letter away',
       exact: true,
@@ -112,7 +126,15 @@ try {
     await expect(page.locator('[data-delivery-phase="inserting"]')).toBeVisible(
       { timeout: 25000 },
     );
-    await page.screenshot({ path: `${out}/${owner}-sending.png` });
+    await expect(page.locator('.delivery-world > text')).toHaveText([
+      'Seattle',
+      'Bangkok',
+    ]);
+    await expect(page.locator('[data-receiving-mouth]')).toHaveAttribute(
+      'data-receiving-mouth',
+      'left',
+    );
+    await page.screenshot({ path: `${out}/${owner}-${width}-sending.png` });
     await expect(
       page.getByRole('button', {
         name: 'Your mailbox is waiting for a reply',
@@ -135,6 +157,7 @@ try {
     );
     console.log(
       owner,
+      `${width}px ${reducedMotion}`,
       'retrieval → reply → sealing → globe → insertion → closure → flag → world passed;',
       phases.join(', '),
     );

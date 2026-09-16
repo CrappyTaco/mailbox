@@ -1,7 +1,8 @@
 import { useId, useMemo } from 'react';
 import { PixelCelestial } from '../world/PixelCelestial';
 import { Mailbox, MailboxEnvelope } from '../mailbox/Mailbox';
-import { displayName, otherOwner, type Owner } from '../../lib/mailbox-state';
+import { type Owner } from '../../lib/mailbox-state';
+import { WORLD_CONFIG } from '../../lib/world-time';
 import {
   WORLD_STYLE,
   MAILBOX_ART,
@@ -12,6 +13,7 @@ import {
   globeShadow,
   solarCycle,
   FLIGHT_ENVELOPE,
+  BOTTOM_MAILBOX_TRANSFORM,
 } from '../../lib/delivery';
 export function DeliveryScene({
   frame,
@@ -104,7 +106,7 @@ export function DeliveryScene({
         <g
           className="delivery-route"
           data-route={reverseRoute ? 'indi-to-auggie' : 'auggie-to-indi'}
-          transform={reverseRoute ? 'rotate(180 200 220)' : undefined}
+          transform={reverseRoute ? BOTTOM_MAILBOX_TRANSFORM : undefined}
         >
           {/* Each mailbox owns its letter and aperture in local coordinates.
               Only a fully clear envelope is handed to the world flight layer. */}
@@ -120,9 +122,10 @@ export function DeliveryScene({
               showLetter={frame.phase === 'departing'}
               letterX={frame.letterX}
               letterClassName="delivery-envelope"
+              letterFlipY={reverseRoute}
             />
           </svg>
-          <g transform="rotate(180 200 220)" data-receiving-mouth="right">
+          <g transform={BOTTOM_MAILBOX_TRANSFORM} data-receiving-mouth="left">
             <svg overflow="visible" {...mailboxPlacement}>
               <Mailbox
                 door={frame.closed ? 'closed' : 'open'}
@@ -134,13 +137,14 @@ export function DeliveryScene({
                 }
                 letterX={frame.letterX}
                 letterClassName="delivery-envelope"
+                letterFlipY={!reverseRoute}
               />
             </svg>
           </g>
           {frame.phase === 'travelling' && (
             <g
               className="delivery-flight delivery-envelope"
-              transform={`translate(${frame.x} ${frame.y}) rotate(${frame.angle})`}
+              transform={`translate(${frame.x} ${frame.y}) scale(1 ${reverseRoute ? -1 : 1}) rotate(${frame.angle})`}
             >
               <MailboxEnvelope
                 x={-FLIGHT_ENVELOPE.width / 2}
@@ -194,11 +198,11 @@ export function DeliveryScene({
           </g>
         </svg>
 
-        <text x={285} y={85}>
-          {displayName(reverseRoute ? recipient : otherOwner(recipient))}
+        <text x={275} y={85}>
+          {WORLD_CONFIG.auggie.locationLabel}
         </text>
-        <text x={285} y={364}>
-          {displayName(reverseRoute ? otherOwner(recipient) : recipient)}
+        <text x={275} y={364}>
+          {WORLD_CONFIG.indi.locationLabel}
         </text>
       </svg>
       <p>

@@ -44,8 +44,7 @@ export const MAILBOX_ART = {
   },
 } as const;
 
-// A letter can be in front of the entrance plane or visible through its aperture.
-// The rest of the mailbox volume is solid, even beyond a sloped sprite edge.
+// The connected transit plane crosses the far jamb; the near rim stays solid.
 export function mailboxPassagePath(approach = true) {
-  return `${approach ? `M-256 -256H${MAILBOX_ART.mouth.left}V390H-256Z ` : ''}${MAILBOX_ART.opening}`;
+  return approach ? MAILBOX_ART.passage : MAILBOX_ART.opening;
 }

@@ -20,7 +20,9 @@ try {
   for (const owner of ['indi', 'auggie']) {
     const page = await runtime.mf.dispatchFetch(runtime.origin + '/' + owner);
     assert.equal(page.status, 200);
-    assert.ok((await page.text()).includes('Our Mailbox'));
+    const html = await page.text();
+    assert.ok(html.includes('world-surface'));
+    assert.ok(!html.includes('Our Mailbox'));
     const letters = await runtime.mf.dispatchFetch(
       runtime.origin + '/api/' + owner + '/letters',
     );

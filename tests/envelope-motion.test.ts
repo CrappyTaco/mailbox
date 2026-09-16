@@ -41,16 +41,16 @@ void test('paper is fully extracted before envelope leaves, and insertion retrac
 void test('envelope approaches the receiving opening from its open side and is contained before closure', () => {
   const waiting = deliveryFrame(FLIGHT_SECONDS, null);
   assert.ok(
-    deliveryFrame(FLIGHT_SECONDS + 0.02, 0).x < waiting.x,
-    'approach is right-to-left, matching the mouth',
+    deliveryFrame(FLIGHT_SECONDS + 0.02, 0).x > waiting.x,
+    'approach is left-to-right, matching the mouth',
   );
-  assert.ok(waiting.x - FLIGHT_ENVELOPE.width / 2 > RECEIVING_MOUTH.outer);
+  assert.ok(waiting.x + FLIGHT_ENVELOPE.width / 2 < RECEIVING_MOUTH.outer);
   assert.ok(waiting.y - FLIGHT_ENVELOPE.height / 2 >= RECEIVING_MOUTH.top);
   assert.ok(waiting.y + FLIGHT_ENVELOPE.height / 2 <= RECEIVING_MOUTH.bottom);
   const halfway = deliveryFrame(FLIGHT_SECONDS + INSERT_SECONDS * 0.6, 0);
   assert.ok(
     halfway.x - FLIGHT_ENVELOPE.width / 2 < RECEIVING_MOUTH.outer &&
-      halfway.x + FLIGHT_ENVELOPE.width / 2 > RECEIVING_MOUTH.lip,
+      halfway.x + FLIGHT_ENVELOPE.width / 2 > RECEIVING_MOUTH.outer,
   );
   assert.equal(halfway.closed, false);
   const contained = deliveryFrame(FLIGHT_SECONDS + INSERT_SECONDS, 0);

@@ -10,7 +10,7 @@ import './world-time.css';
 import './world-style.css';
 import './world-redesign.css';
 import { worldMaterials } from '@/lib/world-materials';
-import { ReferenceLandscape, ReferenceWordmark } from './ReferenceArt';
+import { ReferenceLandscape } from './ReferenceArt';
 import { useWorldTime } from '@/hooks/use-world-time';
 import {
   ENABLE_WORLD_CHARACTERS,
@@ -168,12 +168,6 @@ export function MailboxWorld({
       className={`our-world ${owner} ${box.arrival ? 'mail-arriving' : ''} ${box.connectionLost ? 'connection-lost' : ''}`}
       style={lighting.style}
     >
-      <header className="world-header">
-        <div className="wordmark reference-wordmark">
-          <span className="sr-only">Our Mailbox</span>
-          <ReferenceWordmark />
-        </div>
-      </header>
       <section
         className="world-surface"
         aria-label={`${displayName(owner)}’s little world`}

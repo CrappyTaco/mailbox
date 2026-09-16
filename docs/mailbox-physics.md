@@ -1,31 +1,34 @@
 # Mailbox rendering and delivery geometry
 
-## Diagnosed causes
+## Causes and fixes
 
-- **Floating stored letter:** `Mailbox` placed the raster envelope at a fixed `y=45`, independently of the newer shell's sloping sill. Its bottom ended above the floor. The position is now derived from the hinge/floor and snapped to the envelope pixel grid.
-- **Door gaps and doubled borders:** the closed panel added an ink contour inside the shell's existing rim. During opening, independently rounding projected vertices created crossed edges and missing columns near the hinge. The authoring script now projects a rigid quarter turn about the shared sill, extrudes the sheet boundary before rasterization, and lets the shell supply the closed border.
-- **World letter clipping and inconsistent appearance:** delivery used the separate 160:88 vector envelope at a local width of 48 units; the close-up used a 47:41 raster at 23.5 units. The aperture is about 30 units wide. An oversized envelope, stale entrance coordinates, and a world-space clipping path made partial visibility look like a chopped asset. Both mailbox scenes and flight now use the original complete raster and its proportions.
-- **Rim leaks at fractional sizes:** an analytic SVG clip and a separately resampled PNG rim can disagree at a device-pixel boundary. The shell is now partitioned into disjoint cavity and exterior PNGs on the original source grid. The actual exterior pixels cover the envelope. A regression test verifies that the two layers reconstruct the original shell exactly, without overlap, missing pixels, or changed colors.
-- **Floating globe mailboxes:** the original world placement assumed the entire 154-unit canvas was occupied. The visible post ends earlier and includes scalloped cutouts. Placement now anchors the continuous post shaft to the globe surface; the terrain paints over the buried end.
-- **Duplicated scene geometry:** delivery previously rendered each mailbox once below and once above an independently transformed letter, and reflected the sending mailbox horizontally. It now uses one shared mailbox assembly per location, with local insertion/extraction coordinates and an unreflected sending orientation.
+1. **Sliced envelope:** mailboxPassagePath() combined an approach rectangle ending at local x=3.09 with an aperture beginning at x=7.88. The 4.79-unit gap erased an internal strip during insertion/extraction. MAILBOX_PASSAGE_FACE now defines one connected transit plane extending the opening leftward. The original complete letter.png is unchanged.
+2. **Premature rim occlusion:** author-mailbox-sprites.mjs split the master along MAILBOX_DOOR_FACE, placing both jambs in front. The left jamb is the far edge in this perspective. Partitioning along the transit plane puts it behind the letter while retaining the near arch, right jamb, sill and side wall in front. interior.png and exterior.png remain disjoint, pixel-exact pieces of the original shell; no artwork is repainted.
+3. **Bottom orientation and approach:** DeliveryScene used a 180-degree rotation, while deliveryFrame() independently assumed a half-circle and an upside-down envelope. One equatorial reflection now reorients the complete bottom assembly: body, aperture, door, flag/pivot, post and baked shading. Its opening faces left. A cubic path uses the same exit anchors as insertion, clears the globe and joins both horizontal passage axes. The envelope is counter-reflected inside the bottom assembly to stay upright without changing artwork or dimensions. Reversing the route reflects the route as a whole; Seattle remains above and Bangkok below.
+4. **World labels:** delivery used displayName() for personal names. It now uses the existing WORLD_CONFIG location labels, Seattle and Bangkok. Internal owner IDs and letter ownership remain unchanged. The labels move slightly left so both names fit comfortably.
+5. **Title and heart:** MailboxWorld mounted an absolutely positioned header containing ReferenceWordmark, which cropped both words and the adjacent heart from target.png through TARGET_MASKS.title. The header, screen-reader text, crop component and header-specific CSS are removed. The full-viewport scene needs no spacer or replacement header. The browser title is now “Letters”.
+6. **Double door outline:** the seated sprite added an inner bevel beside the shell's curved seam, and its inset upper-right contour exposed a narrow crescent of the dark cavity. The offline sprite authoring contour now fills that crescent and reserves edge bevels for the exposed, moving door. The existing nine frames retain their hinge endpoints, projection, opening angle and reversible 560 ms timeline. No door interaction or animation JavaScript changed for this refinement.
 
 ## Rendering contract
 
-`Mailbox` paints cavity → envelope → exterior shell → hinged door → flag. The passage clip permits only the true aperture and the space beyond the front jamb. The exterior layer provides pixel-accurate wall occlusion. Atlas viewports retain their required frame clipping; the envelope itself is an untrimmed image.
+Mailbox paints rear shell/cavity → envelope → near shell → hinged door → flag. The source-pixel partition and SVG passage clip derive from the same MAILBOX_PASSAGE_FACE. The narrower MAILBOX_DOOR_FACE defines the aperture and hinge; the offline door artwork has a small contour correction without changing runtime masks or hinge attachment.
 
-During extraction/insertion, `letterX` is expressed in mailbox units. Once the entire envelope clears the open door, `DeliveryScene` transfers it to the world flight layer. Its world position, dimensions and rotation match at both handoff boundaries. The flight layer has no mailbox clip. The receiving mailbox performs the reverse transfer before insertion.
+The seated envelope rests on the shared sill. letterX is expressed in mailbox coordinates during retrieval, departure and insertion. Only when fully clear of the door does the delivery scene transfer it to the flight layer. Position, scale, orientation and asset identity match across both transfers. Closure waits until the letter is contained; the flag rises after closure. Late server acknowledgement holds the letter outside the opening.
 
-The globe, post anchors, route, and letters share the delivery SVG coordinate system and scale together. Close-up retrieval uses the same stored and exit positions. The landscape, palette, flag artwork, envelope raster and original shell colors are preserved.
+BOTTOM_MAILBOX_TRANSFORM applies to the complete assembly. mailboxLetterCenter() applies the corresponding point transform for flight endpoints. Globe surface anchors still bury both post ends, and the earth paints above those ends. Reverse routes use the same geometry and depth order.
 
 ## Verification
 
 - `node --import ./scripts/register-tests.mjs --test tests/*.test.ts`
 - `node --import ./scripts/register-tests.mjs scripts/verify-mailbox-physics.mjs`
-- `node --import ./scripts/register-tests.mjs scripts/review-mailbox-flow.mjs` (local app on port 3100; all letter APIs intercepted by fixtures)
+- `node --import ./scripts/register-tests.mjs --test tests/send.browser.e2e.ts`
+- `node --import ./scripts/register-tests.mjs scripts/review-mailbox-flow.mjs` (built app on port 3100; letter APIs intercepted by fixtures)
 - `node node_modules/oxlint/bin/oxlint`
 - `node node_modules/next/dist/bin/next typegen` then `node node_modules/typescript/bin/tsc --noEmit`
 - `node node_modules/vinext/dist/cli.js build`
 
-The pixel verifier samples 468 production-component frames across both owners, day/night lighting, and 1280×900, 900×650 and 390×844 viewports. It checks aperture occlusion, complete exterior envelopes, and closed-door coverage. Raster comparisons allow a half-device-pixel boundary and small RGB resampling noise; source-pixel layer reconstruction and door coverage tests remain exact.
+The pixel verifier covers both routes, day/night and 1280×900, 900×650 and 390×844 viewports. It checks completeness throughout transit across the jamb, not only once the envelope is outside. It measures alpha coverage with a white silhouette of the same image, keeping production clipping, transforms and draw order; an unclipped render supplies a pixel-grid reference. This avoids mistaking dark ink blending into the cavity or filtered blue shell repaint noise for missing artwork. Original-color frames are saved for visual review. Closed-door coverage, near-wall occlusion, upright orientation and labels are also checked.
 
-For manual slow-motion review, run `node --import ./scripts/register-tests.mjs scripts/preview-mailbox-sprites.mjs 3190` and open `http://127.0.0.1:3190/?set=journey`. Door poses and the journey contact sheet are saved under `.local/mailbox-physics/`.
+Source tests verify exact shell reconstruction, far/near rim depth, all door-frame hinge contacts and closed coverage. Geometry tests check continuous handoffs, globe clearance and delayed acknowledgement. Browser tests exercise production send/read/reply persistence using disposable D1 databases. The fixture review covers desktop and phone flows, reduced motion, all delivery phases, and the full-height header-free layout.
+
+For slow-motion review, run `node --import ./scripts/register-tests.mjs scripts/preview-mailbox-sprites.mjs 3190` and open `http://127.0.0.1:3190/?set=journey`. Rendered frames are saved under .local/mailbox-physics/ and live-flow screenshots under .local/mailbox-polish/.

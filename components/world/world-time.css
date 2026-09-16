@@ -17,7 +17,6 @@
 .our-world .world-scene {
   background: var(--sky-top, #c5dfe8);
 }
-.world-header,
 .our-world > .lock-world {
   color: var(--world-ui, #684b50);
 }
@@ -170,7 +169,6 @@
   .landscape rect,
   .world-scene > .mailbox-hit .mailbox-art path,
   .world-clock,
-  .world-header,
   .our-world > .lock-world,
   .our-world .nameplate {
     transition: none;

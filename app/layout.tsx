@@ -6,7 +6,7 @@ export const viewport: Viewport = {
   themeColor: '#cce1e8',
 };
 export const metadata: Metadata = {
-  title: 'Our Mailbox',
+  title: 'Letters',
   description: 'Letters for Indi and Auggie.',
   robots: { index: false, follow: false },
   icons: { icon: '/favicon.svg' },

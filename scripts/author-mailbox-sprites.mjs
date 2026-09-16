@@ -6,6 +6,7 @@ import {
   MAILBOX_SPRITES,
   MAILBOX_SHELL,
   MAILBOX_DOOR_FACE,
+  MAILBOX_PASSAGE_FACE,
 } from '../lib/mailbox-sprites.ts';
 import { MAILBOX_HINGE } from '../lib/mailbox-geometry.ts';
 
@@ -95,7 +96,7 @@ const inPolygon = (x, y, polygon) => {
   }
   return inside;
 };
-// Split the existing master on its aperture in the source pixel grid. These
+// Split the existing master on its transit plane in the source pixel grid. These
 // disjoint layers reconstruct it exactly and sample identically at every size.
 // In particular the real rim pixels, not a separately rounded SVG clip edge,
 // occlude the envelope at fractional display scales.
@@ -103,7 +104,7 @@ for (const layer of ['interior', 'exterior']) {
   const data = Buffer.from(shell);
   for (let py = 0; py < MH; py++)
     for (let px = 0; px < MW; px++) {
-      const interior = inPolygon(px + 0.5, py + 0.5, MAILBOX_DOOR_FACE);
+      const interior = inPolygon(px + 0.5, py + 0.5, MAILBOX_PASSAGE_FACE);
       if (interior !== (layer === 'interior')) data[(py * MW + px) * 4 + 3] = 0;
     }
   await sharp(data, { raw: { width: MW, height: MH, channels: 4 } })
@@ -125,6 +126,32 @@ const [hingeRightX, hingeRightY] = MAILBOX_DOOR_FACE.at(-1);
 const sourceHinge = (x) =>
   hingeLeftY +
   ((x - hingeLeftX) * (hingeRightY - hingeLeftY)) / (hingeRightX - hingeLeftX);
+// Visual contour only: fill the thin cavity crescent left by the old inset
+// upper-right arc. Keep the runtime aperture/masks and both hinge endpoints
+// unchanged. The shell still owns the one strong curved seam.
+const doorFace = [
+  ...MAILBOX_DOOR_FACE.slice(0, 17),
+  [455, 290],
+  [468, 290],
+  [468, 298],
+  [479, 298],
+  [479, 307],
+  [495, 307],
+  [495, 316],
+  [505, 316],
+  [505, 326],
+  [515, 326],
+  [515, 337],
+  [525, 337],
+  [525, 350],
+  [534, 350],
+  [534, 362],
+  [541, 362],
+  [541, 376],
+  [548, 376],
+  [548, 413],
+  ...MAILBOX_DOOR_FACE.slice(-2),
+];
 const doors = [],
   poses = [];
 for (let frame = 0; frame < count; frame++) {
@@ -143,7 +170,7 @@ for (let frame = 0; frame < count; frame++) {
     // Rasterization below supplies opaque pixel steps without antialiasing.
     return [px, py];
   };
-  const points = MAILBOX_DOOR_FACE.map(project);
+  const points = doorFace.map(project);
   poses.push(points);
   // Extrude the actual boundary before sampling it. Growing a sampled mask
   // cannot repair columns missed by a thin, nearly edge-on face.
@@ -193,8 +220,11 @@ for (let frame = 0; frame < count; frame++) {
             ? doorInk.shade
             : doorInk.blue;
       if (edge) color = doorInk.outline;
-      else if (lowerBevel) color = doorInk.underside;
-      else if (upperBevel) color = doorInk.rim;
+      // The seated face shares the shell's curved border. An additional inner
+      // bevel follows that same curve and reads as a second inset panel.
+      // Only a moving, exposed door needs its own edge bevels.
+      else if (frame > 0 && lowerBevel) color = doorInk.underside;
+      else if (frame > 0 && upperBevel) color = doorInk.rim;
       const i = (y * MW + x) * 4;
       data.set(color, i);
       data[i + 3] = 255;
