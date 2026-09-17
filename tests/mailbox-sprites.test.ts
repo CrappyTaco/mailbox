@@ -209,7 +209,7 @@ void test('all states use one shell and the same raster door system without defo
   assert.equal(mailboxSpriteFrame(Number.NaN), 0);
 });
 
-void test('stored mail is mostly behind the near wall and fully hidden when closed', async () => {
+void test('stored mail is complete in the open cavity and fully hidden when closed', async () => {
   const [door, letter, exterior] = await Promise.all([
     raster('door-0.png'),
     raster('letter.png'),
@@ -242,8 +242,5 @@ void test('stored mail is mostly behind the near wall and fully hidden when clos
         `stored envelope exposed through closed door at ${x},${y}`,
       );
     }
-  assert.ok(
-    visible > total * 0.25 && visible < total * 0.5,
-    `only a readable corner should remain visible: ${visible}/${total}`,
-  );
+  assert.equal(visible, total, 'the open cavity must show the complete envelope');
 });

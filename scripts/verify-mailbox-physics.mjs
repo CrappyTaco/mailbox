@@ -318,8 +318,8 @@ try {
             );
           if (time === 0)
             assert.ok(
-              visible > geometry.area * 0.2 && visible < geometry.area * 0.55,
-              'stored mail shows a small anchored corner; most stays behind the near wall',
+              visible > geometry.area * 0.85,
+              'stored mail must show a complete readable envelope in the open cavity',
             );
           if (
             viewport.width === 1280 &&

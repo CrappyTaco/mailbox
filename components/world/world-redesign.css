@@ -155,7 +155,7 @@
     translate: 0 0;
   }
   to {
-    translate: var(--mailbox-exit-x) var(--mailbox-exit-y);
+    translate: var(--mailbox-exit-x) 0;
   }
 }
 .world-delivering > .reference-stage {

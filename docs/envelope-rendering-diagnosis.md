@@ -9,14 +9,11 @@ It is a complete 47 × 41 PNG, extracted from `target.png` by
 into that one image; there are no pseudo-elements, canvas draws or separate
 flap elements in these scenes.
 
-The mailbox displays it at 18.8 × 16.4 local units in the starting workspace;
-flight uses 9.4 × 8.2 world units (the same artwork at the mailbox's 0.5 globe
-scale). Actual screen size also follows the scene viewport scale. Those sizing
-edits predate the diagnosis. The initial clipping-only commit retained the
-branch's 23.5 × 20.5 local-unit envelope, 11.75 × 10.25 in globe coordinates,
-stored at x = 13.5. The clipping fix was verified with both versions. The
-subsequent publishing request includes the smaller envelope, deeper seating,
-sill-following trajectory and brighter door artwork from the working copy.
+The mailbox displays it at 23.5 × 20.5 local units; flight uses 11.75 × 10.25
+world units (the same artwork at the mailbox's 0.5 globe scale). Actual screen
+size also follows the scene viewport scale. The envelope is seated at x = 13.5
+so its complete rectangle remains readable in the open cavity. The clipping fix
+and this placement are verified together.
 
 Main-scene hierarchy before this change:
 
@@ -62,10 +59,10 @@ delivery-render checks. We did **not** reproduce the historical sliced-strip bug
 on this baseline and should not claim that we did.
 
 The starting version still clips the whole image to a fixed passage **as well
-as** covering it with `exterior.png` and `doors.png`. At stored x = 29.5, the
-18.8-unit envelope extends behind the near wall; only its corner is meant to
-show. That partial appearance is legitimate occlusion. Removing the foreground
-without removing the clip, however, still leaves an incomplete underlying image.
+as** covering it with `exterior.png` and `doors.png`. At the old stored x = 29.5,
+the smaller envelope extended behind the near wall and looked incomplete even
+with the clip removed. The current x = 13.5 placement keeps the full rectangle
+readable while preserving the foreground depth cue.
 The requested architecture removes this redundant second source of visibility.
 
 ## Style and state comparison
@@ -73,7 +70,7 @@ The requested architecture removes this redundant second source of visibility.
 | Property                       | Free flight                                   | Mailbox before this change                                                              |
 | ------------------------------ | --------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Component / asset              | `MailboxEnvelope` / `letter.png`              | Same                                                                                    |
-| Size in local viewBox          | 9.4 × 8.2                                     | 18.8 × 16.4, then globe scale 0.5                                                       |
+| Size in local viewBox          | 11.75 × 10.25                                 | 23.5 × 20.5, then globe scale 0.5                                                        |
 | Image construction             | SVG `<image>`, nearest-pixel raster           | Same                                                                                    |
 | Clip / mask on letter ancestry | None                                          | User-space passage `clipPath`; no mask                                                  |
 | SVG overflow                   | `.delivery-world`: visible                    | `.mailbox-art`: visible                                                                 |
@@ -81,7 +78,7 @@ The requested architecture removes this redundant second source of visibility.
 | Depth                          | Route child, before globe                     | Interior → letter → exterior → door → flag                                              |
 | Letter z-index                 | Auto; SVG paint order                         | Auto; SVG paint order                                                                   |
 | Main-scene stacking            | Delivery stage z-index 12                     | Hit target z-index 3; reference stage isolated                                          |
-| Translation                    | `translate(frame.x frame.y)`                  | `letterX` / `mailboxLetterY`, or CSS retrieval translation                              |
+| Translation                    | `translate(frame.x frame.y)`                  | `letterX`, or CSS retrieval translation                                                  |
 | Scale / rotation               | Route reflection, counter-reflection; angle 0 | Shared scene scale; bottom letter counter-reflected                                     |
 | Filter                         | Pixel-art brightness filter where inherited   | Same; changes color, not geometry                                                       |
 | Timeline                       | `deliveryFrame`, travelling 1.2–6.2 s         | Departing 0–1.2 s; waiting for confirmation; insertion 1.6 s, closure 0.6 s, flag 0.5 s |

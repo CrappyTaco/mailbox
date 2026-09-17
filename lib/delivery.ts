@@ -1,5 +1,4 @@
 import { DELIVERY_GLOBE, MAILBOX_ART } from './world-style';
-import { mailboxLetterY } from './mailbox-geometry';
 export type DeliveryPhase =
   | 'departing'
   | 'travelling'
@@ -28,8 +27,7 @@ const { centerY } = DELIVERY_GLOBE;
 export const BOTTOM_MAILBOX_TRANSFORM = `translate(0 ${2 * centerY}) scale(1 -1)`;
 export function mailboxLetterCenter(letterX: number, receiving = false) {
   const x = globe.x + (letterX + stored.width / 2) * globe.scale;
-  const y =
-    globe.y + (mailboxLetterY(letterX) + stored.height / 2) * globe.scale;
+  const y = globe.y + (stored.y + stored.height / 2) * globe.scale;
   return receiving ? { x, y: 2 * centerY - y } : { x, y };
 }
 export const DEPARTING_MOUTH = {
