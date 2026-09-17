@@ -1,4 +1,5 @@
 import { DELIVERY_GLOBE, MAILBOX_ART } from './world-style';
+import { mailboxLetterY } from './mailbox-geometry';
 export type DeliveryPhase =
   | 'departing'
   | 'travelling'
@@ -27,7 +28,8 @@ const { centerY } = DELIVERY_GLOBE;
 export const BOTTOM_MAILBOX_TRANSFORM = `translate(0 ${2 * centerY}) scale(1 -1)`;
 export function mailboxLetterCenter(letterX: number, receiving = false) {
   const x = globe.x + (letterX + stored.width / 2) * globe.scale;
-  const y = globe.y + (stored.y + stored.height / 2) * globe.scale;
+  const y =
+    globe.y + (mailboxLetterY(letterX) + stored.height / 2) * globe.scale;
   return receiving ? { x, y: 2 * centerY - y } : { x, y };
 }
 export const DEPARTING_MOUTH = {
@@ -43,7 +45,7 @@ export const RECEIVING_MOUTH = {
 export const FLIGHT_PATH = {
   start: mailboxLetterCenter(exitX),
   end: mailboxLetterCenter(exitX, true),
-  // Horizontal tangents at both ends join the local extraction/insertion axis.
+  // Endpoints use the same fully extracted position as each local passage.
   // The middle of the curve clears the globe, including the envelope's width.
   controlX: DELIVERY_GLOBE.x - FLIGHT_ENVELOPE.width - 40,
 };

@@ -10,6 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { DeliveryScene } from '../components/letter/DeliveryScene.tsx';
 import { Mailbox } from '../components/mailbox/Mailbox.tsx';
 import { MAILBOX_SHELL, MAILBOX_PASSAGE_FACE } from '../lib/mailbox-sprites.ts';
+import { MAILBOX_ART } from '../lib/world-style.ts';
 import {
   deliveryFrame,
   DEPARTURE_SECONDS,
@@ -186,12 +187,13 @@ try {
           });
           const barePng = await page.screenshot(),
             bare = await pixels(barePng);
-          const clear = [
-            'departing',
-            'travelling',
-            'waiting',
-            'inserting',
-          ].includes(frame.phase);
+          const clear =
+            ['departing', 'travelling', 'waiting', 'inserting'].includes(
+              frame.phase,
+            ) &&
+            (frame.phase === 'travelling' ||
+              frame.letterX + MAILBOX_ART.stored.width <=
+                MAILBOX_ART.mouth.right);
           let reference;
           let referencePng;
           if (clear) {
@@ -316,8 +318,8 @@ try {
             );
           if (time === 0)
             assert.ok(
-              visible > geometry.area * 0.85,
-              'stored letter must be visible on the floor',
+              visible > geometry.area * 0.2 && visible < geometry.area * 0.55,
+              'stored mail shows a small anchored corner; most stays behind the near wall',
             );
           if (
             viewport.width === 1280 &&

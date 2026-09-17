@@ -5,7 +5,6 @@ import {
   FLIGHT_SECONDS,
   solarCycle,
   globeShadow,
-  RECEIVING_MOUTH,
   FLIGHT_PATH,
   INSERT_SECONDS,
   CLOSE_SECONDS,
@@ -146,7 +145,7 @@ void test('delivery path has no jumps and waits visibly for server confirmation 
   assert.equal(waiting.phase, 'waiting');
   assert.deepEqual(
     [waiting.x, waiting.y],
-    [FLIGHT_PATH.end.x, RECEIVING_MOUTH.centerY],
+    [FLIGHT_PATH.end.x, FLIGHT_PATH.end.y],
   );
   assert.equal(deliveryFrame(30, 30).phase, 'inserting');
   assert.equal(deliveryFrame(30 + INSERT_SECONDS + 0.001, 30).phase, 'closing');

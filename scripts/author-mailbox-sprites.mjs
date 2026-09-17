@@ -121,6 +121,10 @@ const doorInk = {
   shade: [...pixel(master, 720, 557)].slice(0, 3),
   underside: [...pixel(master, 730, 620)].slice(0, 3),
 };
+// A modest value lift separates the hinged face from the body without adding
+// another outline. Apply it to every pose; retain the original dark edge ink.
+for (const band of ['blue', 'light', 'shade'])
+  doorInk[band] = doorInk[band].map((channel) => channel + 18);
 const [hingeLeftX, hingeLeftY] = MAILBOX_DOOR_FACE[0];
 const [hingeRightX, hingeRightY] = MAILBOX_DOOR_FACE.at(-1);
 const sourceHinge = (x) =>

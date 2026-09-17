@@ -12,9 +12,11 @@ flap elements in these scenes.
 The mailbox displays it at 18.8 × 16.4 local units in the starting workspace;
 flight uses 9.4 × 8.2 world units (the same artwork at the mailbox's 0.5 globe
 scale). Actual screen size also follows the scene viewport scale. Those sizing
-edits predate this task and remain uncommitted: the isolated commit retains the
+edits predate the diagnosis. The initial clipping-only commit retained the
 branch's 23.5 × 20.5 local-unit envelope, 11.75 × 10.25 in globe coordinates,
-stored at x = 13.5. The clipping fix is verified with both versions.
+stored at x = 13.5. The clipping fix was verified with both versions. The
+subsequent publishing request includes the smaller envelope, deeper seating,
+sill-following trajectory and brighter door artwork from the working copy.
 
 Main-scene hierarchy before this change:
 

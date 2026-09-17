@@ -209,27 +209,41 @@ void test('all states use one shell and the same raster door system without defo
   assert.equal(mailboxSpriteFrame(Number.NaN), 0);
 });
 
-void test('closed door pixels fully cover the stored envelope', async () => {
-  const [door, letter] = await Promise.all([
+void test('stored mail is mostly behind the near wall and fully hidden when closed', async () => {
+  const [door, letter, exterior] = await Promise.all([
     raster('door-0.png'),
     raster('letter.png'),
+    raster('exterior.png'),
   ]);
+  let total = 0;
+  let visible = 0;
   // Convert stored-envelope pixels to the approved master's registration.
   for (let y = 0; y < letter.info.height; y++)
     for (let x = 0; x < letter.info.width; x++) {
       if (!letter.data[(y * letter.info.width + x) * 4 + 3]) continue;
       const dx = Math.floor(
-        (MAILBOX_ART.stored.x + (x + 0.5) * 0.5 - MAILBOX_SHELL.x) /
+        (MAILBOX_ART.stored.x +
+          ((x + 0.5) * MAILBOX_ART.stored.width) / letter.info.width -
+          MAILBOX_SHELL.x) /
           MAILBOX_SHELL.scale,
       );
       const dy = Math.floor(
-        (MAILBOX_ART.stored.y + (y + 0.5) * 0.5 - MAILBOX_SHELL.y) /
+        (MAILBOX_ART.stored.y +
+          ((y + 0.5) * MAILBOX_ART.stored.height) / letter.info.height -
+          MAILBOX_SHELL.y) /
           MAILBOX_SHELL.scale,
       );
+      const alpha = (dy * door.info.width + dx) * 4 + 3;
+      total++;
+      if (!exterior.data[alpha]) visible++;
       assert.equal(
-        door.data[(dy * door.info.width + dx) * 4 + 3],
+        Math.max(door.data[alpha], exterior.data[alpha]),
         255,
         `stored envelope exposed through closed door at ${x},${y}`,
       );
     }
+  assert.ok(
+    visible > total * 0.25 && visible < total * 0.5,
+    `only a readable corner should remain visible: ${visible}/${total}`,
+  );
 });

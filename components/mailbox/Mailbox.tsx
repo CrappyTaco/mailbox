@@ -1,6 +1,7 @@
 import { type CSSProperties } from 'react';
 import { MAILBOX_ART } from '../../lib/world-style';
 import { MAILBOX_SPRITES } from '../../lib/mailbox-sprites';
+import { mailboxLetterY } from '../../lib/mailbox-geometry';
 import {
   MailboxShell,
   MailboxInterior,
@@ -70,6 +71,7 @@ export function Mailbox({
   const doorOpen = open || (door ? door === 'open' : ajar || !mail);
   const animatedDoor = useSpriteMotion(doorOpen);
   const animatedFlag = useSpriteMotion(mail, 480);
+  const letterY = mailboxLetterY(letterX);
   return (
     <svg
       overflow="visible"
@@ -82,6 +84,7 @@ export function Mailbox({
       style={
         {
           '--mailbox-exit-x': `${MAILBOX_ART.exitX - MAILBOX_ART.stored.x}px`,
+          '--mailbox-exit-y': `${mailboxLetterY(MAILBOX_ART.exitX) - MAILBOX_ART.stored.y}px`,
         } as CSSProperties
       }
     >
@@ -93,11 +96,11 @@ export function Mailbox({
           <g
             transform={
               letterFlipY
-                ? `translate(0 ${2 * MAILBOX_ART.stored.y + MAILBOX_ART.stored.height}) scale(1 -1)`
+                ? `translate(0 ${2 * letterY + MAILBOX_ART.stored.height}) scale(1 -1)`
                 : undefined
             }
           >
-            <MailboxEnvelope {...MAILBOX_ART.stored} x={letterX} />
+            <MailboxEnvelope {...MAILBOX_ART.stored} x={letterX} y={letterY} />
           </g>
         </g>
       )}

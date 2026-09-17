@@ -28,12 +28,20 @@ const path = (points: readonly (readonly [number, number])[]) =>
   points
     .map(([px, py], i) => `${i ? 'L' : 'M'}${x + px * scale} ${y + py * scale}`)
     .join('') + 'Z';
-const letterWidth = 47 / 2;
-const letterHeight = 41 / 2;
-const storedX = 13.5;
+// Keep the original envelope's aspect ratio at a smaller, shared scene scale.
+// Seat most of it behind the existing near wall, leaving its folded corner
+// visible inside the opening. Extraction uses this same complete sprite.
+const letterWidth = 47 * 0.4;
+const letterHeight = 41 * 0.4;
+const storedX = 29.5;
 // The lower left corner touches the sloping sill. Snap inward to the half-unit
 // letter pixel grid, within one pixel of contact; never suspend it at mouth center.
 const storedY = Math.floor((mailboxFloorAt(storedX) - letterHeight) * 2) / 2;
+// Follow the sill's existing perspective during extraction/insertion. A deeper
+// resting position cannot travel horizontally without grazing the raised lip.
+export function mailboxLetterY(letterX: number) {
+  return storedY + mailboxFloorAt(letterX) - mailboxFloorAt(storedX);
+}
 export const mailboxGeometry = {
   mouth: {
     left: local(255, 0).x, // outer front jamb, not the inside edge of the aperture

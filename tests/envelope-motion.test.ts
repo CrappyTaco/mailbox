@@ -47,12 +47,17 @@ void test('envelope approaches the receiving opening from its open side and is c
   assert.ok(waiting.x + FLIGHT_ENVELOPE.width / 2 < RECEIVING_MOUTH.outer);
   assert.ok(waiting.y - FLIGHT_ENVELOPE.height / 2 >= RECEIVING_MOUTH.top);
   assert.ok(waiting.y + FLIGHT_ENVELOPE.height / 2 <= RECEIVING_MOUTH.bottom);
-  const halfway = deliveryFrame(FLIGHT_SECONDS + INSERT_SECONDS * 0.6, 0);
-  assert.ok(
-    halfway.x - FLIGHT_ENVELOPE.width / 2 < RECEIVING_MOUTH.outer &&
-      halfway.x + FLIGHT_ENVELOPE.width / 2 > RECEIVING_MOUTH.outer,
+  // A deeper resting position changes when the envelope crosses the jamb,
+  // while the existing insertion timing and easing stay the same.
+  const crossing = Array.from({ length: 99 }, (_, i) =>
+    deliveryFrame(FLIGHT_SECONDS + (INSERT_SECONDS * (i + 1)) / 100, 0),
+  ).find(
+    (frame) =>
+      frame.x - FLIGHT_ENVELOPE.width / 2 < RECEIVING_MOUTH.outer &&
+      frame.x + FLIGHT_ENVELOPE.width / 2 > RECEIVING_MOUTH.outer,
   );
-  assert.equal(halfway.closed, false);
+  assert.ok(crossing, 'the same envelope must cross the opening continuously');
+  assert.equal(crossing.closed, false);
   const contained = deliveryFrame(FLIGHT_SECONDS + INSERT_SECONDS, 0);
   assert.ok(contained.x + FLIGHT_ENVELOPE.width / 2 <= RECEIVING_MOUTH.lip);
   assert.equal(contained.closed, true);
