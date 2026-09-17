@@ -102,15 +102,21 @@ for (const deployedOrigin of [
           await sender
             .getByRole('button', { name: 'Add flower stamp', exact: true })
             .click();
-          const responsePromise = sender.waitForResponse(
-            (response) =>
-              response.url() === `${deployedOrigin}/api/${owner}/letters` &&
-              response.request().method() === 'POST',
-          );
-          await sender
-            .getByRole('button', { name: 'send letter', exact: true })
-            .click();
-          const response = await responsePromise;
+          const sendButton = sender.getByRole('button', {
+            name: 'send letter',
+            exact: true,
+          });
+          // Finish editor validation before starting the network-response timer.
+          // Await both operations so a click failure cannot orphan the waiter.
+          await expect(sendButton).toBeEnabled({ timeout: 15000 });
+          const [response] = await Promise.all([
+            sender.waitForResponse(
+              (response) =>
+                response.url() === `${deployedOrigin}/api/${owner}/letters` &&
+                response.request().method() === 'POST',
+            ),
+            sendButton.click(),
+          ]);
           const payload = response.request().postDataJSON();
           assert.equal(
             await response.request().headerValue('origin'),

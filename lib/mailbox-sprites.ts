@@ -66,8 +66,8 @@ export const MAILBOX_DOOR_FACE = [
 
 // The letter travels in front of the far (left) jamb and behind the near
 // (right) jamb. Extend the aperture toward the approach side, keeping its
-// near arch and sill. This same polygon partitions the raster shell and clips
-// the letter, so there is no disconnected strip across the transit plane.
+// near arch and sill. This polygon partitions the raster shell into rear and
+// foreground artwork; the complete letter is never clipped to this polygon.
 export const MAILBOX_PASSAGE_FACE = [
   [-2048, 287],
   ...MAILBOX_DOOR_FACE.slice(15),

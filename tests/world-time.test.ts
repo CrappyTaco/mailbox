@@ -104,15 +104,17 @@ void test('clock and corner text stay readable through every minute of twilight'
     assert.ok(contrast(p.ui, p.sky) >= 4.5, `corner text at minute ${minute}`);
   }
 });
-void test('visible envelope is clipped behind the mailbox lip and closed mail stays covered', () => {
+void test('complete envelope sits between rear artwork and the foreground wall and door', () => {
   const open = renderToStaticMarkup(
     createElement(Mailbox, { mail: true, ajar: true }),
   );
-  assert.match(open, /clipPath/);
+  assert.doesNotMatch(open, /clipPath|clip-path|<mask/);
   assert.match(open, /mailbox-letter/);
   assert.match(open, /flag-up/);
   assert.match(open, /data-door-progress="1.000"/);
   assert.match(open, /data-flag-progress="1.000"/);
+  assert.ok(open.indexOf('mailbox-interior') < open.indexOf('mailbox-letter'));
+  assert.ok(open.indexOf('mailbox-letter') < open.indexOf('mailbox-shell'));
   assert.ok(
     open.indexOf('mailbox-letter') < open.indexOf('mailbox-hinged-door'),
   );
@@ -121,7 +123,8 @@ void test('visible envelope is clipped behind the mailbox lip and closed mail st
     closed.indexOf('mailbox-letter') < closed.indexOf('mailbox-hinged-door'),
   );
   assert.match(closed, /data-door-progress="0.000"/);
-  // The clipped letter stays behind the same raster door in both states.
+  // The complete letter stays behind the same raster door in both states.
+  assert.doesNotMatch(closed, /clipPath|clip-path|<mask/);
   assert.match(closed, /data-flag-progress="1.000"/);
   assert.match(closed, /\/world\/mailbox\/letter.png/);
   assert.match(closed, /\/world\/mailbox\/doors.png/);

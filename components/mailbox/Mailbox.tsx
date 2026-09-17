@@ -1,5 +1,5 @@
-import { useId, type CSSProperties } from 'react';
-import { MAILBOX_ART, mailboxPassagePath } from '../../lib/world-style';
+import { type CSSProperties } from 'react';
+import { MAILBOX_ART } from '../../lib/world-style';
 import { MAILBOX_SPRITES } from '../../lib/mailbox-sprites';
 import {
   MailboxShell,
@@ -8,14 +8,6 @@ import {
   MailboxFlag,
 } from './MailboxParts';
 import { useSpriteMotion } from '../../hooks/use-sprite-motion';
-
-function MailboxPassageClip({ id }: { id: string }) {
-  return (
-    <clipPath id={id} clipPathUnits="userSpaceOnUse">
-      <path d={mailboxPassagePath()} />
-    </clipPath>
-  );
-}
 
 // One untrimmed raster and one aspect ratio in the cavity and in flight.
 export function MailboxEnvelope({
@@ -75,7 +67,6 @@ export function Mailbox({
   /** Keep the envelope upright in a mailbox planted below the globe. */
   letterFlipY?: boolean;
 }) {
-  const passage = useId();
   const doorOpen = open || (door ? door === 'open' : ajar || !mail);
   const animatedDoor = useSpriteMotion(doorOpen);
   const animatedFlag = useSpriteMotion(mail, 480);
@@ -94,22 +85,19 @@ export function Mailbox({
         } as CSSProperties
       }
     >
-      <defs>
-        <MailboxPassageClip id={passage} />
-      </defs>
       <MailboxInterior />
+      {/* Keep the complete letter between the rear and foreground artwork.
+          Only painted mailbox pixels occlude it; no passage clips its body. */}
       {showLetter && (
-        <g clipPath={`url(#${passage})`}>
-          <g className={`mailbox-letter ${letterClassName}`}>
-            <g
-              transform={
-                letterFlipY
-                  ? `translate(0 ${2 * MAILBOX_ART.stored.y + MAILBOX_ART.stored.height}) scale(1 -1)`
-                  : undefined
-              }
-            >
-              <MailboxEnvelope {...MAILBOX_ART.stored} x={letterX} />
-            </g>
+        <g className={`mailbox-letter ${letterClassName}`}>
+          <g
+            transform={
+              letterFlipY
+                ? `translate(0 ${2 * MAILBOX_ART.stored.y + MAILBOX_ART.stored.height}) scale(1 -1)`
+                : undefined
+            }
+          >
+            <MailboxEnvelope {...MAILBOX_ART.stored} x={letterX} />
           </g>
         </g>
       )}

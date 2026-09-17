@@ -11,7 +11,7 @@
 
 ## Rendering contract
 
-Mailbox paints rear shell/cavity → envelope → near shell → hinged door → flag. The source-pixel partition and SVG passage clip derive from the same MAILBOX_PASSAGE_FACE. The narrower MAILBOX_DOOR_FACE defines the aperture and hinge; the offline door artwork has a small contour correction without changing runtime masks or hinge attachment.
+Mailbox paints rear shell/cavity → envelope → near shell → hinged door → flag. The source-pixel partition derives from MAILBOX_PASSAGE_FACE; the envelope itself has no passage clip. Only the foreground artwork occludes the complete letter (see [the envelope diagnosis](envelope-rendering-diagnosis.md)). The narrower MAILBOX_DOOR_FACE defines the aperture and hinge; the offline door artwork has a small contour correction without changing hinge attachment.
 
 The seated envelope rests on the shared sill. letterX is expressed in mailbox coordinates during retrieval, departure and insertion. Only when fully clear of the door does the delivery scene transfer it to the flight layer. Position, scale, orientation and asset identity match across both transfers. Closure waits until the letter is contained; the flag rises after closure. Late server acknowledgement holds the letter outside the opening.
 
@@ -21,6 +21,7 @@ BOTTOM_MAILBOX_TRANSFORM applies to the complete assembly. mailboxLetterCenter()
 
 - `node --import ./scripts/register-tests.mjs --test tests/*.test.ts`
 - `node --import ./scripts/register-tests.mjs scripts/verify-mailbox-physics.mjs`
+- `node --import ./scripts/register-tests.mjs scripts/verify-envelope-integrity.mjs`
 - `node --import ./scripts/register-tests.mjs --test tests/send.browser.e2e.ts`
 - `node --import ./scripts/register-tests.mjs scripts/review-mailbox-flow.mjs` (built app on port 3100; letter APIs intercepted by fixtures)
 - `node node_modules/oxlint/bin/oxlint`
