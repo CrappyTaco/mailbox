@@ -4,14 +4,24 @@ This directory contains the finished mailbox assets introduced on 2026-09-12. Th
 
 ## Runtime files
 
-| File | Dimensions | Purpose |
-| --- | --- | --- |
-| shell.png | 272 × 308 | One finished shell, arched rim, cavity, sill, side, roof and post |
-| doors.png | 2448 × 308 | Nine deliberately authored door silhouettes, one 272 × 308 cell each |
-| flags.png | 2448 × 308 | Nine baked flag positions, including the original mounting screw |
-| letter.png | 47 × 41 | Original stored envelope crop |
+| File       | Dimensions | Purpose                                                              |
+| ---------- | ---------- | -------------------------------------------------------------------- |
+| shell.png  | 272 × 308  | One finished shell, arched rim, cavity, sill, side, roof and post    |
+| doors.png  | 2448 × 308 | Nine deliberately authored door silhouettes, one 272 × 308 cell each |
+| flags.png  | 2448 × 308 | Nine baked flag positions, including the original mounting screw     |
+| letter.png | 160 × 88   | Complete closed envelope from shared stationery vector artwork       |
 
 `shell-border-master.png` is the current saved image-generation output, used only during offline authoring. `shell-master.png` is retained as its original source. Individual `door-0.png` through `door-8.png` are authoring/review outputs and regression-test inputs. `registration.json` records the shared origin, hinge, and authored silhouettes.
+
+## Complete envelope correction (2026-09-17)
+
+The former 47 × 41 scene crop contained only the visible part of an envelope
+already inside the mailbox. Its truncated flap remained visible in free flight.
+`scripts/author-envelope-sprite.mjs` now renders the existing `EnvelopeBack`,
+`EnvelopeFront` and `EnvelopeFlap` vector components into a complete PNG.
+Mailbox and flight preserve its 160:88 aspect ratio. Rebuild only this asset with
+`node --import ./scripts/register-tests.mjs scripts/author-envelope-sprite.mjs`.
+The full mailbox authoring script also calls this generator.
 
 ## Border and door refinement (2026-09-13)
 

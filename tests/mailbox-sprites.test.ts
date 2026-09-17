@@ -5,14 +5,18 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Mailbox } from '../components/mailbox/Mailbox';
 import { MAILBOX_HINGE } from '../lib/mailbox-geometry';
-import { MAILBOX_ART } from '../lib/world-style';
+import { MAILBOX_ART, ENVELOPE_ART, WORLD_STYLE } from '../lib/world-style';
+import { FLIGHT_ENVELOPE } from '../lib/delivery';
+import { envelopeSprite } from '../scripts/author-envelope-sprite.mjs';
 import {
   MAILBOX_SHELL,
   MAILBOX_SPRITES,
   mailboxSpriteFrame,
 } from '../lib/mailbox-sprites';
 
-const sharp = createRequire(import.meta.url)('sharp') as (path: string) => {
+const sharp = createRequire(import.meta.url)('sharp') as (
+  path: string | Buffer,
+) => {
   ensureAlpha(): {
     raw(): {
       toBuffer(options: {
@@ -26,6 +30,58 @@ const raster = (name: string) =>
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
+
+void test('mailbox and flight use complete stationery artwork at its natural aspect ratio', async () => {
+  const actual = await raster('letter.png');
+  const expected = await sharp(await envelopeSprite())
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  assert.deepEqual(
+    [actual.info.width, actual.info.height],
+    [ENVELOPE_ART.width, ENVELOPE_ART.height],
+    'a crop from the mailbox scene is not a complete envelope',
+  );
+  assert.ok(
+    actual.data.equals(expected.data),
+    'sprite must match all three closed stationery layers',
+  );
+  for (const size of [MAILBOX_ART.stored, FLIGHT_ENVELOPE]) {
+    assert.equal(
+      size.width / size.height,
+      ENVELOPE_ART.width / ENVELOPE_ART.height,
+    );
+  }
+  // Alpha coverage alone accepted the old chopped drawing. Check the actual
+  // artwork too: the flap reaches the center, both folds and all borders exist.
+  const colorAt = (x: number, y: number) =>
+    '#' +
+    actual.data
+      .subarray(
+        (y * actual.info.width + x) * 4,
+        (y * actual.info.width + x) * 4 + 3,
+      )
+      .toString('hex');
+  assert.equal(colorAt(80, 38), WORLD_STYLE.paper);
+  for (const [x, y] of [
+    [1, 44],
+    [159, 44],
+    [80, 87],
+    [80, 0],
+  ]) {
+    assert.equal(colorAt(x, y), WORLD_STYLE.ink, `missing border at ${x},${y}`);
+  }
+  for (const [x, y] of [
+    [29, 52],
+    [131, 52],
+  ]) {
+    assert.equal(
+      colorAt(x, y),
+      WORLD_STYLE.paperFold,
+      `missing side fold at ${x},${y}`,
+    );
+  }
+});
 
 void test('each door drawing is one connected opaque silhouette attached along the shared sill', async () => {
   const { width: W, height: H, scale } = MAILBOX_SHELL;
@@ -242,5 +298,9 @@ void test('stored mail is complete in the open cavity and fully hidden when clos
         `stored envelope exposed through closed door at ${x},${y}`,
       );
     }
-  assert.equal(visible, total, 'the open cavity must show the complete envelope');
+  assert.equal(
+    visible,
+    total,
+    'the open cavity must show the complete envelope',
+  );
 });

@@ -3,6 +3,7 @@ import {
   MAILBOX_PASSAGE_FACE,
   MAILBOX_SHELL,
 } from './mailbox-sprites';
+import { ENVELOPE_ART } from './envelope-art';
 
 const { x, y, scale } = MAILBOX_SHELL;
 const local = (px: number, py: number) => ({
@@ -28,11 +29,10 @@ const path = (points: readonly (readonly [number, number])[]) =>
   points
     .map(([px, py], i) => `${i ? 'L' : 'M'}${x + px * scale} ${y + py * scale}`)
     .join('') + 'Z';
-// Keep the complete envelope at the registered half-scale used by the world
-// flight. Its left edge sits in the open cavity so the whole rectangle remains
-// readable while the near wall provides the mailbox depth cue.
+// Retain the scene width, but use the complete artwork's natural aspect ratio.
+// The former 47 x 41 size described a scene crop, not a whole envelope.
 const letterWidth = 47 / 2;
-const letterHeight = 41 / 2;
+const letterHeight = (letterWidth * ENVELOPE_ART.height) / ENVELOPE_ART.width;
 const storedX = 13.5;
 // The lower left corner touches the sloping sill. Snap inward to the half-unit
 // letter pixel grid, within one pixel of contact; never suspend it at mouth center.

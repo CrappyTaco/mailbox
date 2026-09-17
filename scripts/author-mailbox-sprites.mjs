@@ -9,6 +9,7 @@ import {
   MAILBOX_PASSAGE_FACE,
 } from '../lib/mailbox-sprites.ts';
 import { MAILBOX_HINGE } from '../lib/mailbox-geometry.ts';
+import { writeEnvelopeSprite } from './author-envelope-sprite.mjs';
 
 const out = 'public/world/mailbox';
 await mkdir(out, { recursive: true });
@@ -376,10 +377,7 @@ await sharp({
   )
   .png()
   .toFile(out + '/flags.png');
-await sharp('public/world/reference/target.png')
-  .extract({ left: 823, top: 515, width: 47, height: 41 })
-  .png()
-  .toFile(out + '/letter.png');
+await writeEnvelopeSprite(out + '/letter.png');
 await writeFile(
   out + '/registration.json',
   JSON.stringify(

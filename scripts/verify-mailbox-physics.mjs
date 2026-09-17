@@ -316,11 +316,20 @@ try {
               0,
               `closed coverage: ${recipient} ${viewport.width} night ${night} time ${time}: ${JSON.stringify(changed)}`,
             );
-          if (time === 0)
+          // The clear-envelope comparison above also covers stored mail (t=0).
+          // Compare actual raster pixels, not fractional bounding-box area:
+          // at 900px the complete sprite paints 98/98 reference pixels while
+          // its analytic rectangle has area 122 due to nearest-pixel rounding.
+          if (time === 0) {
             assert.ok(
-              visible > geometry.area * 0.85,
-              'stored mail must show a complete readable envelope in the open cavity',
+              clear,
+              'stored mail must be fully inside the readable open cavity',
             );
+            await writeFile(
+              `${out}/stored-${viewport.width}-${recipient}-${night}.png`,
+              png,
+            );
+          }
           if (
             viewport.width === 1280 &&
             night === 0 &&

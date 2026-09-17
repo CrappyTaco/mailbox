@@ -1,4 +1,5 @@
 import { mailboxGeometry } from './mailbox-geometry';
+export { ENVELOPE_ART } from './envelope-art';
 // Shared material colors for the world sprites, stationery and embedded UI.
 export const WORLD_STYLE = {
   ink: '#252238',
@@ -14,13 +15,6 @@ export const WORLD_STYLE = {
   paper: '#f4e9ce',
   paperShade: '#d1b598',
   paperFold: '#a68a78',
-} as const;
-
-// A single physical envelope coordinate system, including the animated flap.
-export const ENVELOPE_ART = {
-  width: 160,
-  height: 88,
-  viewBox: '0 0 160 88',
 } as const;
 
 export const DELIVERY_GLOBE = {
